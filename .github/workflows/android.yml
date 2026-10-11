@@ -138,20 +138,14 @@ jobs:
         run: adb start-server
 
       - name: Validate project and import assets
-        timeout-minutes: 3
+        timeout-minutes: 6
         shell: bash
         run: |
-          set +e
-          # On this runner Godot may finish importing and then hang while loading
-          # editor layout. Cap that editor-only tail so the Android job cannot stall.
-          timeout --verbose --signal=TERM --kill-after=10s 2m \
-            godot --headless --editor --path . --import --quit
-          status=$?
-          if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
-            echo "::warning::Godot import process exceeded 2 minutes; continuing to resource validation and export."
-          elif [ "$status" -ne 0 ]; then
-            exit "$status"
-          fi
+          set -euo pipefail
+          # --quit can leave the headless editor waiting on editor-layout setup.
+          # --quit-after gives Godot a bounded number of frames to finish scanning/importing.
+          timeout --verbose --signal=TERM --kill-after=10s 5m \
+            godot --headless --editor --path . --import --quit-after 5
 
       - name: Install project Android build template
         timeout-minutes: 3
