@@ -11,7 +11,7 @@ permissions:
 jobs:
   build-android:
     runs-on: ubuntu-22.04
-    timeout-minutes: 35
+    timeout-minutes: 50
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -199,6 +199,18 @@ jobs:
           set -o pipefail
           timeout --signal=TERM --kill-after=20s 11m godot --verbose --headless --path . --export-debug "Android" build/How-to-MUKBANG-0.2.0-beta.2.apk 2>&1 | tee build/android-export.log
           test -s build/How-to-MUKBANG-0.2.0-beta.2.apk
+
+      # Keep diagnostic logs even when Godot import or APK export fails.
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: How-to-MUKBANG-android-diagnostics
+          path: |
+            build/android-export.log
+            .godot/logs/**
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
