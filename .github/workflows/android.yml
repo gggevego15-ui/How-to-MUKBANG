@@ -120,6 +120,12 @@ jobs:
       - name: Validate project and import assets
         run: godot --headless --editor --path . --import --quit
 
+      - name: Install project Android build template
+        shell: bash
+        run: |
+          godot --headless --editor --path . --install-android-build-template
+          test -f android/build/build.gradle || test -f android/build/build.gradle.kts || test -d android/build
+
       - name: Validate 4K PBR texture imports
         run: godot --headless --path . --script res://scripts/validate_pbr.gd
 
