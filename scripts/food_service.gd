@@ -519,7 +519,7 @@ func _spawn_bite_effects(food: Node3D) -> void:
 		var direction := Vector3(randf_range(-0.22, 0.22), randf_range(0.08, 0.25), randf_range(-0.16, 0.16))
 		var crumb_tween := create_tween()
 		crumb_tween.set_parallel(true)
-		crumb_tween.tween_property(crumb, "position", direction + Vector3(0, 0.12, 0), 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		crumb_tween.tween_property(crumb, "position", origin + direction + Vector3(0, 0.12, 0), 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		crumb_tween.tween_property(crumb, "scale", Vector3.ZERO, 0.32).set_delay(0.12)
 	var cleanup := create_tween()
 	cleanup.tween_interval(0.5)
