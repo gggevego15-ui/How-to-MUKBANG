@@ -81,8 +81,8 @@ jobs:
           custom_template/release=""
           gradle_build/use_gradle_build=false
           gradle_build/export_format=0
-          gradle_build/min_sdk=""
-          gradle_build/target_sdk=""
+          gradle_build/min_sdk=23
+          gradle_build/target_sdk=35
           architectures/armeabi-v7a=false
           architectures/arm64-v8a=true
           architectures/x86=false
@@ -128,6 +128,7 @@ jobs:
         run: |
           set -o pipefail
           godot --headless --path . --export-debug "Android" build/How-to-MUKBANG-0.2.0-beta.2.apk 2>&1 | tee build/android-export.log
+          test -s build/How-to-MUKBANG-0.2.0-beta.2.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
