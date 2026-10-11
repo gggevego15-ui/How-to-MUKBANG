@@ -43,6 +43,8 @@ func _ready() -> void:
 	_food_service.set_script(load("res://scripts/food_service.gd"))
 	add_child(_food_service)
 	_build_ui()
+	_food_service.delivery_started.connect(_on_delivery_started)
+	_food_service.delivery_completed.connect(_on_delivery_completed)
 
 func _process(_delta: float) -> void:
 	if _player == null:
@@ -302,7 +304,15 @@ func _place_order() -> void:
 	if _food_service != null:
 		_food_service.call("serve", ordered_items, PRODUCTS, _player)
 	if is_instance_valid(_status_label) and _menu_open:
-		_status_label.text = "ЗАКАЗ ГОТОВ! Еда появилась на столе 🍱 Нажми F или кнопку ЕСТЬ."
+		_status_label.text = "Официант несёт твой заказ к столу… 🚶🍱"
+
+func _on_delivery_started() -> void:
+	if is_instance_valid(_status_label):
+		_status_label.text = "Официант несёт твой заказ к столу… 🚶🍱"
+
+func _on_delivery_completed() -> void:
+	if is_instance_valid(_status_label):
+		_status_label.text = "Заказ доставлен! Приятного аппетита 🍽"
 
 func _open_menu() -> void:
 	_menu_open = true
