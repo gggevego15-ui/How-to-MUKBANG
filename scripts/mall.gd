@@ -50,11 +50,11 @@ func _material(key: String, color: Color, roughness: float = 0.7, metallic: floa
 	var noise := FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 	noise.frequency = 0.045
-	noise.fractal_octaves = 4
+	noise.fractal_octaves = 2
 	noise.fractal_lacunarity = 2.1
-	var image := Image.create(256, 256, false, Image.FORMAT_RGBA8)
-	for py in range(256):
-		for px in range(256):
+	var image := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	for py in range(64):
+		for px in range(64):
 			var n := noise.get_noise_2d(float(px), float(py))
 			var v := clampf(0.92 + n * 0.075, 0.82, 1.0)
 			image.set_pixel(px, py, Color(v, v, v, 1.0))
@@ -67,10 +67,11 @@ func _apply_pbr(key: String, family: String) -> void:
 	if material == null:
 		return
 	var root := "res://assets/textures/pbr/%s_" % family
-	material.albedo_texture = load(root + "basecolor_4k.svg") as Texture2D
-	material.roughness_texture = load(root + "roughness_4k.svg") as Texture2D
-	material.normal_texture = load(root + "normal_4k.svg") as Texture2D
-	material.metallic_texture = load(root + "metallic_4k.svg") as Texture2D
+	# Keep 4K source maps for quality checks; use compact raster maps at runtime on mobile.
+	material.albedo_texture = load(root + "basecolor_512.png") as Texture2D
+	material.roughness_texture = load(root + "roughness_512.png") as Texture2D
+	material.normal_texture = load(root + "normal_512.png") as Texture2D
+	material.metallic_texture = load(root + "metallic_512.png") as Texture2D
 	material.normal_enabled = true
 	material.roughness = 1.0
 	material.metallic = 1.0
@@ -559,9 +560,9 @@ func _build_rain() -> void:
 	var rain := CPUParticles3D.new()
 	rain.name = "NightRain"
 	rain.position = Vector3(0, 18.0, 139.0)
-	rain.amount = 1800
+	rain.amount = 500
 	rain.lifetime = 1.8
-	rain.preprocess = 1.8
+	rain.preprocess = 0.35
 	rain.emitting = true
 	rain.direction = Vector3(-0.12, -1.0, 0.0)
 	rain.spread = 7.0
@@ -598,10 +599,10 @@ func _build_lighting() -> void:
 	env.glow_enabled = true
 	env.glow_intensity = 0.38
 	env.glow_bloom = 0.12
-	env.ssao_enabled = true
+	env.ssao_enabled = false
 	env.ssao_radius = 2.2
 	env.ssao_intensity = 1.55
-	env.ssr_enabled = true
+	env.ssr_enabled = false
 	env.ssr_max_steps = 64
 	env.adjustment_enabled = true
 	env.adjustment_contrast = 1.08
@@ -621,7 +622,7 @@ func _build_lighting() -> void:
 			light.position = Vector3(x, 8.8, z)
 			light.light_color = Color("ffe0b5")
 			light.light_energy = 1.2
-			light.shadow_enabled = true
+			light.shadow_enabled = false
 			light.omni_range = 16.0
 			add_child(light)
 
