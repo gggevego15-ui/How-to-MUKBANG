@@ -25,6 +25,7 @@ func _ready() -> void:
 	_build_upper_gallery()
 	_build_decor()
 	_build_street()
+	_build_puddle_ripples()
 	_build_npc_visitors()
 	_build_rain()
 	_build_lighting()
@@ -505,6 +506,20 @@ func _build_street() -> void:
 		for z in range(78, 207, 36):
 			_cylinder(self, "StreetTreeTrunk_%s_%d" % [str(side), z], Vector3(side * 26.0, 1.5, float(z)), 0.22, 3.0, "wood", false)
 			_sphere(self, "StreetTreeCanopy_%s_%d" % [str(side), z], Vector3(side * 26.0, 4.0, float(z)), Vector3(2.5, 3.0, 2.5), "plant")
+
+
+func _build_puddle_ripples() -> void:
+	# A tiny pool of reusable rings: no physics, shaders, or per-drop nodes.
+	var ripple_root := Node3D.new()
+	ripple_root.name = "RainPuddleRipples"
+	ripple_root.set_script(load("res://scripts/puddle_ripples.gd"))
+	add_child(ripple_root)
+	var puddle_positions: Array[Vector3] = []
+	for i in range(0, 34, 3):
+		var px := sin(float(i) * 12.73) * 18.0
+		var pz := 62.0 + float(i) * 4.25
+		puddle_positions.append(Vector3(px, 0.026, pz))
+	ripple_root.call("configure", puddle_positions)
 
 func _build_street_shop(side: float, building_z: float, building_id: int, building_height: float) -> void:
 	# Street-facing storefronts with walk-in doors, display glazing and furnished interiors.
