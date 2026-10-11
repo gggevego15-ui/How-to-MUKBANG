@@ -410,8 +410,12 @@ func _build_street() -> void:
 		for z in range(72, 211, 28):
 			var building_z := float(z)
 			var height := 9.0 + float((z / 7) % 3) * 2.0
-			_box(self, "StreetBuilding_%s_%d" % [str(side), z], Vector3(side * 39.0, height * 0.5, building_z), Vector3(20.0, height, 22.0), "brick")
-			_box(self, "BuildingRoofTrim_%s_%d" % [str(side), z], Vector3(side * 39.0, height, building_z), Vector3(20.3, 0.28, 22.3), "metal", false)
+			# Open storefront shell: the former solid block prevented entering the shops.
+			_box(self, "StreetBuildingRear_%s_%d" % [str(side), z], Vector3(side * 48.8, height * 0.5, building_z), Vector3(0.4, height, 22.0), "brick")
+			_box(self, "StreetBuildingSideA_%s_%d" % [str(side), z], Vector3(side * 39.0, height * 0.5, building_z - 10.8), Vector3(19.6, height, 0.4), "brick")
+			_box(self, "StreetBuildingSideB_%s_%d" % [str(side), z], Vector3(side * 39.0, height * 0.5, building_z + 10.8), Vector3(19.6, height, 0.4), "brick")
+			_box(self, "StreetBuildingRoof_%s_%d" % [str(side), z], Vector3(side * 39.0, height, building_z), Vector3(20.0, 0.35, 22.0), "brick")
+			_box(self, "BuildingRoofTrim_%s_%d" % [str(side), z], Vector3(side * 39.0, height + 0.18, building_z), Vector3(20.3, 0.28, 22.3), "metal", false)
 			_build_street_shop(side, building_z, z, height)
 			for floor_index in range(1, 4):
 				for window_index in range(4):
@@ -460,7 +464,7 @@ func _build_street_shop(side: float, building_z: float, building_id: int, buildi
 		var section_z := building_z - 6.0 + float(section) * 6.0
 		# Wide front display panes on both sides of the entrance.
 		if section != 1:
-			_box(self, "ShopfrontGlass_%d_%d" % [building_id, section], Vector3(front_x, 2.0, section_z), Vector3(0.10, 3.3, 5.7), "glass", false)
+			_box(self, "ShopfrontGlass_%d_%d" % [building_id, section], Vector3(front_x, 2.0, section_z), Vector3(0.10, 3.3, 5.7), "glass", true)
 			_box(self, "ShopWindowFrame_%d_%d" % [building_id, section], Vector3(front_x - side * 0.08, 2.0, section_z), Vector3(0.12, 3.55, 5.95), "metal", false)
 	# Recessed door and glowing sign above the entrance.
 	_box(self, "ShopDoorFrame_%d" % building_id, Vector3(front_x, 1.55, building_z), Vector3(0.16, 3.05, 2.0), "chrome", false)
