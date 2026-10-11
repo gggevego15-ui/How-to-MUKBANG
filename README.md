@@ -4,7 +4,7 @@ A mobile 3D mukbang game prototype made with Godot 4.
 
 ## Current milestone: shopping mall food court
 - Expanded 120 × 110 m shopping mall shell with central atrium, skylight and upper gallery
-- Walkable neon-lit street outside the entrance, with sidewalks, furnished shop interiors visible through display glass, counters, shelves, glowing signs, street lamps, trees and reflective puddles
+- Walkable neon-lit street outside the entrance, with sidewalks, real walk-in shop entrances, collision-free doorways, glass storefronts, stocked shelves, counters, glowing signs, street lamps, trees and reflective puddles
 - Rainy night weather with dense exterior rain, cool night ambience and warm/cyan street lighting
 - Imported glTF Binary (GLB) assets for a layered burger combo, cafe chair and self-service order kiosk
 - GLB assets contain PBR base-colour, metallic/roughness and normal texture channels
