@@ -449,6 +449,22 @@ func _build_street() -> void:
 			lamp.omni_range = 18.0
 			lamp.shadow_enabled = false
 			add_child(lamp)
+	# Interactive street bins with hinged lids.
+	for side in [-1.0, 1.0]:
+		for z in range(92, 201, 36):
+			var bin := Node3D.new()
+			bin.name = "InteractiveStreetBin_%s_%d" % [str(side), z]
+			bin.position = Vector3(side * 23.1, 0.12, float(z))
+			bin.add_to_group("world_interactable")
+			bin.set_meta("interaction_type", "bin")
+			bin.set_meta("interaction_label", "Открыть / закрыть урну")
+			add_child(bin)
+			_box(bin, "BinBody", Vector3(0.0, 0.55, 0.0), Vector3(0.85, 1.1, 0.85), "metal")
+			var lid_pivot := Node3D.new()
+			lid_pivot.name = "LidPivot"
+			lid_pivot.position = Vector3(0.0, 1.05, -0.38)
+			bin.add_child(lid_pivot)
+			_box(lid_pivot, "BinLid", Vector3(0.0, 0.0, 0.38), Vector3(0.92, 0.12, 0.92), "chrome", false)
 	# Thin glossy puddles create broken neon reflections across the asphalt.
 	for i in range(34):
 		var px := sin(float(i) * 12.73) * 18.0
@@ -514,6 +530,21 @@ func _build_street_shop(side: float, building_z: float, building_id: int, buildi
 			_box(self, "ShopStock_%d_%d_%d" % [building_id, shelf, item], Vector3(side * 32.4, 1.75, item_z), Vector3(0.42, 0.62, 0.42), "sign_orange" if (item + shelf) % 2 == 0 else "sign_blue", false)
 	_box(self, "ShopCounter_%d" % building_id, Vector3(side * 38.0, 1.05, building_z + 5.8), Vector3(1.4, 1.7, 6.2), "wood_light")
 	_box(self, "ShopCounterTop_%d" % building_id, Vector3(side * 38.0, 1.95, building_z + 5.8), Vector3(1.55, 0.14, 6.35), "chrome", false)
+	# Interactive drink vending machine: its can animates out when used.
+	var vending := Node3D.new()
+	vending.name = "InteractiveVendingMachine_%d" % building_id
+	vending.position = Vector3(side * 31.2, 0.12, building_z + 6.4)
+	vending.add_to_group("world_interactable")
+	vending.set_meta("interaction_type", "vending")
+	vending.set_meta("interaction_label", "Взять напиток из автомата")
+	add_child(vending)
+	_box(vending, "VendingBody", Vector3(0.0, 1.1, 0.0), Vector3(0.95, 2.2, 0.78), "metal")
+	_box(vending, "VendingDisplay", Vector3(0.0, 1.45, 0.405), Vector3(0.62, 0.78, 0.035), "sign_blue", false)
+	_box(vending, "VendingSlot", Vector3(0.0, 0.34, 0.405), Vector3(0.48, 0.18, 0.035), "black", false)
+	var drink := _box(vending, "DispensedDrink", Vector3(0.0, 0.42, 0.48), Vector3(0.22, 0.32, 0.18), "sign_orange", false)
+	drink.scale = Vector3.ZERO
+	drink.visible = false
+
 	var interior_light := OmniLight3D.new()
 	interior_light.name = "ShopInteriorGlow_%d" % building_id
 	interior_light.position = Vector3(side * 35.0, 3.0, building_z)
