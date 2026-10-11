@@ -1,8 +1,8 @@
 extends Node
 ## Runtime quality presets for Android. Uses low-cost scene changes and render scaling.
 
-const PROFILES := ["Battery saver", "Balanced", "High", "Ultra"]
-const PROFILE_LABELS := ["ЭКО", "БАЛАНС", "ВЫСОКО", "ULTRA"]
+const PROFILES := ["Battery saver", "Balanced", "High", "Ultra", "Ultra 4K"]
+const PROFILE_LABELS := ["ЭКО", "БАЛАНС", "ВЫСОКО", "ULTRA", "ULTRA 4K"]
 const SETTINGS_PATH := "user://graphics.cfg"
 
 var profile_index := 1
@@ -51,7 +51,7 @@ func _collect_nodes(root: Node) -> void:
 func _load_profile() -> void:
 	var config := ConfigFile.new()
 	if config.load(SETTINGS_PATH) == OK:
-		profile_index = clampi(int(config.get_value("graphics", "profile", 1)), 0, 3)
+		profile_index = clampi(int(config.get_value("graphics", "profile", 1)), 0, 4)
 	elif OS.has_feature("mobile") or OS.get_name() == "Android" or OS.get_name() == "iOS":
 		profile_index = 1
 	else:
@@ -91,14 +91,23 @@ func _apply_profile() -> void:
 			_set_puddle_quality(true, 10)
 			_set_visitor_processing(true)
 		3:
-			# Ultra targets high-end phones and PCs. Android uses native viewport scale,
-			# with restrained lights and particles instead of forcing expensive 4K rendering.
+			# Ultra: high detail with a bounded GPU cost on mobile.
 			Engine.max_fps = 60
-			viewport.scaling_3d_scale = 1.0
+			viewport.scaling_3d_scale = 1.0 if mobile else 1.15
 			_set_glow(true)
 			_set_light_budget(mini(_omni_lights.size(), 16 if mobile else _omni_lights.size()))
 			_set_rain(320 if mobile else 500)
 			_set_puddle_quality(true, 16)
+			_set_visitor_processing(true)
+		4:
+			# 4K supersampling is desktop-only. Android remains at native scale to avoid
+			# excessive heat, memory use and battery drain.
+			Engine.max_fps = 60
+			viewport.scaling_3d_scale = 1.0 if mobile else 1.5
+			_set_glow(true)
+			_set_light_budget(mini(_omni_lights.size(), 12 if mobile else _omni_lights.size()))
+			_set_rain(240 if mobile else 500)
+			_set_puddle_quality(true, 12 if mobile else 20)
 			_set_visitor_processing(true)
 	if _quality_button != null:
 		_quality_button.text = "ГРАФИКА: " + PROFILE_LABELS[profile_index]
@@ -170,7 +179,7 @@ func _build_overlay() -> void:
 	_quality_button.size = Vector2(196, 46)
 	_quality_button.focus_mode = Control.FOCUS_NONE
 	_quality_button.add_theme_font_size_override("font_size", 13)
-	_quality_button.tooltip_text = "ЭКО → БАЛАНС → ВЫСОКО → ULTRA. На Android ULTRA не форсирует 4K-разрешение."
+	_quality_button.tooltip_text = "ЭКО → БАЛАНС → ВЫСОКО → ULTRA → ULTRA 4K. 4K-суперсэмплинг только на ПК; Android использует безопасный масштаб."
 	_quality_button.pressed.connect(_cycle_profile)
 	root.add_child(_quality_button)
 
