@@ -24,6 +24,10 @@ var _touch_ui: Control
 var _stick_base: Panel
 var _stick_knob: Panel
 var _touch_enabled := false
+var _jump_button: Button
+var _sprint_button: Button
+var _touch_jump_requested := false
+var _touch_sprint_active := false
 
 const STICK_RADIUS := 66.0
 const STICK_MAX_TRAVEL := 48.0
@@ -138,6 +142,68 @@ func _setup_touch_controls() -> void:
 	_touch_ui.add_child(_stick_base)
 	_touch_ui.add_child(_stick_knob)
 	_reset_stick_visuals()
+
+func _create_action_buttons() -> void:
+\t_jump_button = _make_action_button("JUMP", Vector2(92, 64))
+\t_sprint_button = _make_action_button("RUN", Vector2(92, 64))
+\t_touch_ui.add_child(_jump_button)
+\t_touch_ui.add_child(_sprint_button)
+\t_layout_action_buttons()
+\t_jump_button.pressed.connect(func() -> void:
+\t\t_touch_jump_requested = true
+\t)
+\t_sprint_button.button_down.connect(func() -> void:
+\t\t_touch_sprint_active = true
+\t\t_sprint_button.modulate = Color(0.72, 1.0, 0.82, 1.0)
+\t)
+\t_sprint_button.button_up.connect(func() -> void:
+\t\t_touch_sprint_active = false
+\t\tsprint_button_reset()
+\t)
+
+func _make_action_button(label: String, button_size: Vector2) -> Button:
+\tvar button := Button.new()
+\tbutton.name = label + "Button"
+\tbutton.text = label
+\tbutton.size = button_size
+\tbutton.focus_mode = Control.FOCUS_NONE
+\tbutton.add_theme_font_size_override("font_size", 18)
+\tvar normal := StyleBoxFlat.new()
+\tnormal.bg_color = Color(0.10, 0.14, 0.19, 0.72)
+\tnormal.corner_radius_top_left = 18
+\tnormal.corner_radius_top_right = 18
+\tnormal.corner_radius_bottom_left = 18
+\tnormal.corner_radius_bottom_right = 18
+\tnormal.border_width_left = 2
+\tnormal.border_width_top = 2
+\tnormal.border_width_right = 2
+\tnormal.border_width_bottom = 2
+\tnormal.border_color = Color(0.78, 0.88, 1.0, 0.72)
+\tvar hover := normal.duplicate() as StyleBoxFlat
+\thover.bg_color = Color(0.20, 0.31, 0.42, 0.9)
+\tvar pressed := normal.duplicate() as StyleBoxFlat
+\tpressed.bg_color = Color(0.22, 0.48, 0.36, 0.95)
+\tbutton.add_theme_stylebox_override("normal", normal)
+\tbutton.add_theme_stylebox_override("hover", hover)
+\tbutton.add_theme_stylebox_override("pressed", pressed)
+\tbutton.add_theme_color_override("font_color", Color(0.96, 0.98, 1.0))
+\tbutton.add_theme_color_override("font_hover_color", Color.WHITE)
+\tbutton.add_theme_color_override("font_pressed_color", Color.WHITE)
+\treturn button
+
+func _layout_action_buttons() -> void:
+\tif _touch_ui == null or _jump_button == null or _sprint_button == null:
+\t\treturn
+\tvar viewport_size := get_viewport().get_visible_rect().size
+\t_jump_button.position = Vector2(viewport_size.x - 116.0, viewport_size.y - 198.0)
+\t_sprint_button.position = Vector2(viewport_size.x - 224.0, viewport_size.y - 112.0)
+
+func _is_touch_button_position(point: Vector2) -> bool:
+\treturn (_jump_button != null and _jump_button.get_global_rect().has_point(point)) or (_sprint_button != null and _sprint_button.get_global_rect().has_point(point))
+
+func sprint_button_reset() -> void:
+\tif _sprint_button != null:
+\t\t_sprint_button.modulate = Color.WHITE
 
 func _make_touch_disc(label: String, disc_size: Vector2, tint: Color) -> Panel:
 	var disc := Panel.new()
