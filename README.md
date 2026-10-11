@@ -46,7 +46,7 @@ Imported GLB props remain at:
 
 ## Android PBR import settings
 
-The 16 `.import` sidecars under `assets/textures/pbr/` enable mipmap generation and VRAM compression (`compress/mode=2`). Normal maps use the normal-map compression flag. Project rendering settings enable Android ETC2/ASTC texture import and moderate 4× anisotropic filtering. `scripts/validate_pbr.gd` checks that all 16 textures load at 4096×4096 and that their import settings keep mipmaps and compression enabled.
+The 16 `.import` sidecars under `assets/textures/pbr/` enable mipmap generation and VRAM compression (`compress/mode=2`). Normal maps use the normal-map compression flag. Project rendering settings enable Android ETC2/ASTC texture import and 4× anisotropic filtering. Runtime materials use family-specific normal strength and tiling for food, wood, ceramic and metal, while keeping 512×512 sampled maps to protect mobile VRAM. Bloom is tuned slightly upward for neon readability; SSAO and SSR remain disabled to avoid a large mobile GPU cost. `scripts/validate_pbr.gd` checks that all 16 textures load at 4096×4096 and that their import settings keep mipmaps and compression enabled.
 
 ## First-person controls
 
