@@ -51,6 +51,22 @@ func _material(key: String, color: Color, roughness: float = 0.7, metallic: floa
 	mats[key] = m
 	return m
 
+func _apply_pbr(key: String, family: String) -> void:
+	var material := mats[key] as StandardMaterial3D
+	if material == null:
+		return
+	var root := "res://assets/textures/pbr/%s_" % family
+	material.albedo_texture = load(root + "basecolor_512.png") as Texture2D
+	material.roughness_texture = load(root + "roughness_512.png") as Texture2D
+	material.normal_texture = load(root + "normal_512.png") as Texture2D
+	material.metallic_texture = load(root + "metallic_512.png") as Texture2D
+	material.normal_enabled = true
+	material.roughness = 1.0
+	material.metallic = 1.0
+	material.normal_scale = 0.45 if family == "food" else 0.3
+	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	material.uv1_scale = Vector3(0.22, 0.22, 0.22)
+
 func _make_materials() -> void:
 	_material("floor", Color("c7cbd0"), 0.26)
 	_material("tile_dark", Color("68717d"), 0.32)
@@ -85,6 +101,15 @@ func _make_materials() -> void:
 	_material("chrome", Color("aab7c4"), 0.2, 0.82)
 	_material("screen", Color("152c42"), 0.16)
 	_material("bun_seed", Color("f8e4b5"), 0.7)
+
+	# Shared 512x512 PBR texture sets: colour, roughness, normal and metallic.
+	for key in ["bun", "bun_top", "patty", "lettuce", "tomato", "cheese", "fries", "paper", "cup_red", "drink", "salad", "bun_seed"]:
+		_apply_pbr(key, "food")
+	for key in ["wood", "wood_light"]:
+		_apply_pbr(key, "wood")
+	_apply_pbr("ceramic", "ceramic")
+	_apply_pbr("metal", "metal")
+	_apply_pbr("chrome", "metal")
 
 func _box(parent: Node3D, label: String, pos: Vector3, size: Vector3, material_key: String, solid: bool = true) -> MeshInstance3D:
 	var mesh := BoxMesh.new()
