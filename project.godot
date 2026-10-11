@@ -7,20 +7,22 @@ run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 
 [display]
-window/size/viewport_width=1280
-window/size/viewport_height=720
-window/size/window_width_override=1280
-window/size/window_height_override=720
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1920
+window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
 window/handheld/orientation=1
+window/size/mode=3
+window/size/borderless=true
 window/size/always_on_top=false
 
 [rendering]
 renderer/rendering_method="forward_plus"
 renderer/rendering_method.mobile="mobile"
-anti_aliasing/quality/msaa_3d=1
+anti_aliasing/quality/msaa_3d=2
 anti_aliasing/quality/screen_space_aa=0
 occlusion_culling/use_occlusion_culling=true
 textures/vram_compression/import_etc2_astc=true
-rendering/textures/default_filters/anisotropic_filtering_level=4
+rendering/textures/default_filters/anisotropic_filtering_level=8
 environment/defaults/default_clear_color=Color(0.035, 0.045, 0.065, 1)
