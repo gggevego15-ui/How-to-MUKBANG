@@ -204,7 +204,12 @@ func _build_waiter() -> Node3D:
 	arms.parallel().tween_property(right_arm, "rotation:x", 0.42, 0.18)
 	arms.tween_property(left_arm, "rotation:x", 0.42, 0.18)
 	arms.parallel().tween_property(right_arm, "rotation:x", -0.42, 0.18)
-	waiter.set_meta("walking_tween", arms)
+	var gait := create_tween()
+	gait.set_loops()
+	gait.tween_property(left_leg, "rotation:x", 0.42, 0.18)
+	gait.parallel().tween_property(right_leg, "rotation:x", -0.42, 0.18)
+	gait.tween_property(left_leg, "rotation:x", -0.42, 0.18)
+	gait.parallel().tween_property(right_leg, "rotation:x", 0.42, 0.18)
 	return waiter
 
 func _nearest_table() -> Vector3:
