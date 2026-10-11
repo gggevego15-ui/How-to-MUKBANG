@@ -713,6 +713,12 @@ func _build_rain() -> void:
 	rain.material_override = drop_material
 	add_child(rain)
 
+	# Reuse a tiny fixed pool of animated rings and splash beads; no physics or allocations per drop.
+	var puddle_effects := Node3D.new()
+	puddle_effects.name = "RainPuddleEffects"
+	puddle_effects.set_script(load("res://scripts/rain_puddle_effects.gd"))
+	add_child(puddle_effects)
+
 func _build_lighting() -> void:
 	var world := WorldEnvironment.new()
 	var env := Environment.new()
