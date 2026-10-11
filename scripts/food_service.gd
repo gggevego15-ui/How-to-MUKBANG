@@ -11,6 +11,9 @@ var _fullness := 0
 var _feedback: Label
 var _hand_rig: Node3D
 var _camera: Camera3D
+var _hand_home_position := Vector3(0.46, -0.55, -0.68)
+var _hand_home_rotation := Vector3(-0.12, 0.08, -0.08)
+const BITES_PER_SERVING := 3
 const BITE_SAMPLE_RATE := 22050
 
 func _ready() -> void:
@@ -199,37 +202,6 @@ func _make_food(product: String, category: String, index: int) -> Node3D:
 	return food
 
 func _build_hand_rig() -> void:
-	_hand_rig = Node3D.new()
-	_hand_rig.name = "EatingHand"
-	_hand_rig.position = Vector3(0.46, -0.55, -0.68)
-	_camera.add_child(_hand_rig)
-	var skin := _mat(Color("d99a78"), 0.62)
-	var palm := MeshInstance3D.new()
-	palm.name = "Palm"
-	var palm_mesh := SphereMesh.new()
-	palm_mesh.radius = 0.105
-	palm_mesh.height = 0.19
-	palm_mesh.radial_segments = 12
-	palm_mesh.rings = 6
-	palm.mesh = palm_mesh
-	palm.scale = Vector3(0.82, 1.0, 0.62)
-	palm.material_override = skin
-	_hand_rig.add_child(palm)
-	for finger in range(4):
-		var mesh := MeshInstance3D.new()
-		mesh.name = "Finger_%d" % finger
-		var finger_mesh := CapsuleMesh.new()
-		finger_mesh.radius = 0.022
-		finger_mesh.height = 0.105
-		finger_mesh.radial_segments = 8
-		mesh.mesh = finger_mesh
-		mesh.position = Vector3(-0.055 + float(finger) * 0.037, 0.095 - absf(float(finger) - 1.5) * 0.008, -0.008)
-		mesh.rotation.z = -0.12 + float(finger) * 0.08
-		mesh.material_override = skin
-		_hand_rig.add_child(mesh)
-	_hand_rig.visible = false
-
-func _build_hand_rig() -> void:
 	# Lightweight first-person hand model attached to the camera.
 	_hand_rig = Node3D.new()
 	_hand_rig.name = "EatingHandRig"
@@ -280,6 +252,69 @@ func _build_hand_rig() -> void:
 	thumb.material_override = skin
 	_hand_rig.add_child(thumb)
 
+func _animate_hand_for_food(food: Node3D, lifting: bool) -> void:
+	if _hand_rig == null or not is_instance_valid(_hand_rig):
+		return
+	var product := str(food.get_meta("food_product", "Еда"))
+	var category := str(food.get_meta("food_category", "ФАСТФУД"))
+	var target_position := _hand_home_position
+	var target_rotation := _hand_home_rotation
+	var curl := 0.45
+	var thumb_angle := -0.55
+	# Product-specific grips and wrist paths: cup, pinch, flat slice, noodles or wrap.
+	if category == "НАПИТКИ":
+		target_position += Vector3(-0.07, 0.04, 0.13)
+		target_rotation += Vector3(-0.35, 0.10, 0.20)
+		curl = 0.70
+		thumb_angle = -0.95
+	elif category == "РОЛЛЫ" or product == "Картошка фри":
+		target_position += Vector3(-0.02, 0.01, 0.04)
+		target_rotation += Vector3(-0.18, 0.02, -0.12)
+		curl = 0.28
+		thumb_angle = -0.72
+	elif product == "Пицца пепперони":
+		target_position += Vector3(-0.11, 0.00, 0.02)
+		target_rotation += Vector3(-0.05, 0.0, 0.34)
+		curl = 0.18
+		thumb_angle = -0.42
+	elif product == "Лапша вок":
+		target_position += Vector3(-0.06, 0.03, 0.10)
+		target_rotation += Vector3(-0.28, 0.06, 0.12)
+		curl = 0.34
+		thumb_angle = -0.60
+	elif category == "ДЕСЕРТЫ":
+		target_position += Vector3(-0.03, 0.02, 0.06)
+		target_rotation += Vector3(-0.20, 0.0, -0.08)
+		curl = 0.32
+		thumb_angle = -0.65
+	elif category == "КУРОЧКА":
+		target_position += Vector3(-0.03, 0.02, 0.07)
+		target_rotation += Vector3(-0.22, 0.08, -0.16)
+		curl = 0.56
+		thumb_angle = -0.78
+	else:
+		target_position += Vector3(-0.02, 0.02, 0.08)
+		target_rotation += Vector3(-0.25, 0.02, -0.18)
+		curl = 0.62
+		thumb_angle = -0.86
+	if not lifting:
+		target_position = _hand_home_position
+		target_rotation = _hand_home_rotation
+	_hand_rig.visible = true
+	var hand_tween := create_tween()
+	hand_tween.set_trans(Tween.TRANS_CUBIC)
+	hand_tween.set_ease(Tween.EASE_OUT)
+	hand_tween.tween_property(_hand_rig, "position", target_position, 0.22)
+	hand_tween.parallel().tween_property(_hand_rig, "rotation", target_rotation, 0.22)
+	for finger in range(4):
+		var digit := _hand_rig.get_node_or_null("Finger_%d" % finger) as Node3D
+		if digit != null:
+			var finger_rotation := -0.15 - curl * (0.70 + float(finger % 2) * 0.12)
+			hand_tween.parallel().tween_property(digit, "rotation:z", finger_rotation if lifting else -0.05, 0.18)
+	var thumb := _hand_rig.get_node_or_null("Thumb") as Node3D
+	if thumb != null:
+		hand_tween.parallel().tween_property(thumb, "rotation:z", thumb_angle if lifting else -0.35, 0.18)
+
 func _eat_one() -> void:
 	if _is_eating or _servings.is_empty():
 		return
@@ -294,15 +329,7 @@ func _eat_one() -> void:
 	var original_scale := food.scale
 	var bites_left := int(food.get_meta("bites_left", BITES_PER_SERVING))
 	food.set_meta("bites_left", bites_left)
-	if _hand_rig != null:
-		_hand_rig.visible = true
-		_hand_rig.position = _hand_home_position + Vector3(0.0, -0.10, 0.08)
-		_hand_rig.rotation = _hand_home_rotation + Vector3(-0.15, 0.0, -0.18)
-		var hand_raise := create_tween()
-		hand_raise.set_trans(Tween.TRANS_CUBIC)
-		hand_raise.set_ease(Tween.EASE_OUT)
-		hand_raise.tween_property(_hand_rig, "position", _hand_home_position, 0.20)
-		hand_raise.tween_property(_hand_rig, "rotation", _hand_home_rotation, 0.20)
+	_animate_hand_for_food(food, true)
 	_play_bite_sound(food)
 	var tween := create_tween()
 	tween.set_parallel(true)
