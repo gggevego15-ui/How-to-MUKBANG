@@ -63,6 +63,21 @@ func _make_materials() -> void:
 	_material("plant", Color("42734b"), 0.9)
 	_material("soil", Color("574638"), 0.9)
 	_material("white", Color("f4f3ed"), 0.4)
+	_material("bun", Color("d99a4e"), 0.72)
+	_material("bun_top", Color("e8b86d"), 0.68)
+	_material("patty", Color("493025"), 0.92)
+	_material("lettuce", Color("65a83c"), 0.82)
+	_material("tomato", Color("c9382d"), 0.45)
+	_material("cheese", Color("f3c83f"), 0.48)
+	_material("fries", Color("f2c35b"), 0.7)
+	_material("paper", Color("fff2d6"), 0.8)
+	_material("cup_red", Color("d83d35"), 0.32)
+	_material("drink", Color("6b3928"), 0.18)
+	_material("salad", Color("79a849"), 0.8)
+	_material("ceramic", Color("e8edf1"), 0.22)
+	_material("chrome", Color("aab7c4"), 0.2, 0.82)
+	_material("screen", Color("152c42"), 0.16)
+	_material("bun_seed", Color("f8e4b5"), 0.7)
 
 func _box(parent: Node3D, label: String, pos: Vector3, size: Vector3, material_key: String, solid: bool = true) -> MeshInstance3D:
 	var mesh := BoxMesh.new()
@@ -106,6 +121,83 @@ func _cylinder(parent: Node3D, label: String, pos: Vector3, radius: float, heigh
 		shape_node.shape = shape
 		body.add_child(shape_node)
 		parent.add_child(body)
+
+
+func _sphere(parent: Node3D, label: String, pos: Vector3, scale: Vector3, material_key: String) -> MeshInstance3D:
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.5
+	mesh.height = 1.0
+	mesh.radial_segments = 16
+	mesh.rings = 8
+	var visual := MeshInstance3D.new()
+	visual.name = label
+	visual.mesh = mesh
+	visual.position = pos
+	visual.scale = scale
+	visual.material_override = mats[material_key]
+	parent.add_child(visual)
+	return visual
+
+func _make_burger(origin: Vector3, index: int) -> void:
+	_sphere(self, "BurgerBottom_%d" % index, origin + Vector3(0, 0.12, 0), Vector3(0.58, 0.2, 0.48), "bun")
+	_box(self, "BurgerPatty_%d" % index, origin + Vector3(0, 0.24, 0), Vector3(0.52, 0.12, 0.44), "patty", false)
+	_box(self, "BurgerCheese_%d" % index, origin + Vector3(0, 0.32, 0), Vector3(0.55, 0.055, 0.48), "cheese", false)
+	_sphere(self, "BurgerLettuce_%d" % index, origin + Vector3(0, 0.37, 0), Vector3(0.59, 0.08, 0.49), "lettuce")
+	_sphere(self, "BurgerTop_%d" % index, origin + Vector3(0, 0.49, 0), Vector3(0.6, 0.27, 0.5), "bun_top")
+	for seed in range(5):
+		var a := float(seed) * TAU / 5.0
+		_sphere(self, "SesameSeed_%d_%d" % [index, seed], origin + Vector3(cos(a) * 0.15, 0.625, sin(a) * 0.12), Vector3(0.035, 0.012, 0.02), "bun_seed")
+
+func _make_fries(origin: Vector3, index: int) -> void:
+	_box(self, "FriesSleeve_%d" % index, origin + Vector3(0, 0.22, 0), Vector3(0.42, 0.42, 0.3), "sign_orange", false)
+	for fry in range(7):
+		var x := -0.15 + float(fry % 4) * 0.1
+		var z := -0.07 + float(fry / 4) * 0.11
+		_box(self, "FrenchFry_%d_%d" % [index, fry], origin + Vector3(x, 0.48 + float(fry % 3) * 0.025, z), Vector3(0.055, 0.38, 0.055), "fries", false)
+
+func _make_drink(origin: Vector3, index: int) -> void:
+	_cylinder(self, "DrinkCup_%d" % index, origin + Vector3(0, 0.28, 0), 0.17, 0.55, "cup_red", false)
+	_cylinder(self, "DrinkLid_%d" % index, origin + Vector3(0, 0.57, 0), 0.18, 0.045, "white", false)
+	_cylinder(self, "DrinkLiquid_%d" % index, origin + Vector3(0, 0.48, 0), 0.145, 0.12, "drink", false)
+	_box(self, "DrinkStraw_%d" % index, origin + Vector3(0.045, 0.72, 0), Vector3(0.025, 0.28, 0.025), "white", false)
+
+func _make_pizza(origin: Vector3, index: int) -> void:
+	_cylinder(self, "PizzaCrust_%d" % index, origin + Vector3(0, 0.13, 0), 0.3, 0.09, "bun", false)
+	_cylinder(self, "PizzaSauce_%d" % index, origin + Vector3(0, 0.19, 0), 0.27, 0.035, "tomato", false)
+	_cylinder(self, "PizzaCheese_%d" % index, origin + Vector3(0, 0.215, 0), 0.255, 0.025, "cheese", false)
+	for topping in range(5):
+		var a := float(topping) * TAU / 5.0
+		_sphere(self, "Pepperoni_%d_%d" % [index, topping], origin + Vector3(cos(a) * 0.14, 0.24, sin(a) * 0.14), Vector3(0.09, 0.025, 0.09), "tomato")
+
+func _make_food_display(vendor_index: int, x: float, z: float) -> void:
+	for j in range(3):
+		var origin := Vector3(x - 2.7 + float(j) * 2.7, 1.95, z)
+		var index := vendor_index * 10 + j
+		match vendor_index:
+			0:
+				_make_burger(origin, index)
+				if j == 1: _make_fries(origin + Vector3(0.55, 0, 0.1), index)
+			1:
+				_cylinder(self, "NoodleBowl_%d" % index, origin + Vector3(0, 0.12, 0), 0.3, 0.18, "ceramic", false)
+				for noodle in range(5):
+					_sphere(self, "Noodle_%d_%d" % [index, noodle], origin + Vector3(-0.16 + float(noodle) * 0.08, 0.25, sin(float(noodle)) * 0.08), Vector3(0.12, 0.035, 0.08), "bun_top")
+			2:
+				_make_pizza(origin, index)
+			3:
+				_sphere(self, "ChickenPiece_%d" % index, origin + Vector3(0, 0.16, 0), Vector3(0.42, 0.27, 0.34), "bun_top")
+				_sphere(self, "ChickenCrunch_%d" % index, origin + Vector3(-0.08, 0.25, 0.02), Vector3(0.3, 0.15, 0.28), "bun")
+			4:
+				_cylinder(self, "DessertPlate_%d" % index, origin + Vector3(0, 0.08, 0), 0.32, 0.035, "ceramic", false)
+				_sphere(self, "Donut_%d" % index, origin + Vector3(0, 0.2, 0), Vector3(0.4, 0.14, 0.38), "sign_pink")
+				_cylinder(self, "DonutHole_%d" % index, origin + Vector3(0, 0.28, 0), 0.09, 0.025, "bun_top", false)
+		5:
+				_box(self, "TacoShell_%d" % index, origin + Vector3(0, 0.16, 0), Vector3(0.48, 0.2, 0.25), "bun_top", false)
+				_sphere(self, "TacoFilling_%d" % index, origin + Vector3(0, 0.27, 0), Vector3(0.4, 0.12, 0.2), "lettuce")
+		6:
+				_make_drink(origin, index)
+			7:
+				_make_drink(origin, index)
+				_sphere(self, "MilkshakeCream_%d" % index, origin + Vector3(0, 0.63, 0), Vector3(0.19, 0.11, 0.19), "white")
 
 func _build_mall_shell() -> void:
 	_box(self, "GroundFloor", Vector3(0, -0.25, 0), Vector3(MALL_WIDTH, 0.5, MALL_DEPTH), "floor")
@@ -170,13 +262,19 @@ func _build_food_court() -> void:
 			_build_table_set(Vector3(x, 0, z), seat_colors[(row + col) % seat_colors.size()], row * 10 + col)
 
 func _build_table_set(origin: Vector3, seat_key: String, index: int) -> void:
-	_box(self, "DiningTable_%02d" % index, origin + Vector3(0, 1.0, 0), Vector3(3.1, 0.18, 2.1), "wood_light")
-	for dx in [-1.0, 1.0]:
-		for dz in [-1.0, 1.0]:
-			_box(self, "TableLeg_%02d" % index, origin + Vector3(dx * 1.25, 0.48, dz * 0.72), Vector3(0.14, 0.95, 0.14), "metal")
+	# A cafe-style table with beveled-looking tabletop layers and four separate chairs.
+	_box(self, "DiningTableTop_%02d" % index, origin + Vector3(0, 1.05, 0), Vector3(2.65, 0.12, 1.65), "wood_light")
+	_box(self, "DiningTableEdge_%02d" % index, origin + Vector3(0, 0.98, 0), Vector3(2.72, 0.08, 1.72), "metal", false)
+	_box(self, "TablePedestal_%02d" % index, origin + Vector3(0, 0.5, 0), Vector3(0.22, 0.9, 0.22), "metal")
+	_box(self, "TableFoot_%02d" % index, origin + Vector3(0, 0.08, 0), Vector3(1.05, 0.12, 0.7), "metal")
 	for side in [-1.0, 1.0]:
-		_box(self, "DiningBench_%02d_%s" % [index, str(side)], origin + Vector3(0, 0.52, side * 1.75), Vector3(2.5, 0.95, 0.58), seat_key)
-		_box(self, "BenchBack_%02d_%s" % [index, str(side)], origin + Vector3(0, 1.12, side * 2.0), Vector3(2.5, 0.75, 0.18), seat_key)
+		for end in [-1.0, 1.0]:
+			var chair_pos := origin + Vector3(end * 0.92, 0, side * 1.25)
+			_box(self, "ChairSeat_%02d_%s_%s" % [index, str(side), str(end)], chair_pos + Vector3(0, 0.52, 0), Vector3(0.82, 0.16, 0.72), seat_key)
+			for leg_x in [-0.3, 0.3]:
+				for leg_z in [-0.25, 0.25]:
+					_box(self, "ChairLeg_%02d" % index, chair_pos + Vector3(leg_x, 0.25, leg_z), Vector3(0.055, 0.5, 0.055), "metal", false)
+			_box(self, "ChairBack_%02d" % index, chair_pos + Vector3(0, 0.91, side * 0.31), Vector3(0.82, 0.62, 0.12), seat_key)
 
 func _build_vendor_row() -> void:
 	var sign_keys := ["sign_orange", "sign_pink", "sign_blue", "sign_orange", "sign_pink", "sign_blue", "sign_orange", "sign_pink"]
@@ -184,20 +282,38 @@ func _build_vendor_row() -> void:
 	for i in range(vendor_names.size()):
 		var x := -40.0 + float(i) * 11.4
 		_box(self, "VendorBack_%02d" % i, Vector3(x, 1.7, -39.0), Vector3(9.5, 3.4, 2.2), "black")
-		_box(self, "VendorCounter_%02d" % i, Vector3(x, 1.0, -36.8), Vector3(9.4, 1.5, 1.5), "wood")
+		_box(self, "VendorCounterCabinet_%02d" % i, Vector3(x, 0.83, -36.8), Vector3(9.25, 1.05, 1.42), "wood")
+		_box(self, "VendorCounterTop_%02d" % i, Vector3(x, 1.42, -36.8), Vector3(9.55, 0.16, 1.58), "chrome", false)
+		_box(self, "VendorToeKick_%02d" % i, Vector3(x, 0.18, -36.03), Vector3(9.15, 0.22, 0.08), "metal", false)
+		for drawer in range(4):
+			_box(self, "CabinetPanel_%d_%d" % [i, drawer], Vector3(x - 3.45 + float(drawer) * 2.3, 0.77, -36.06), Vector3(2.05, 0.58, 0.055), "wood_light", false)
+			_box(self, "CabinetHandle_%d_%d" % [i, drawer], Vector3(x - 3.45 + float(drawer) * 2.3, 0.8, -36.015), Vector3(0.45, 0.035, 0.035), "chrome", false)
 		_box(self, "VendorBrandPanel_%02d" % i, Vector3(x, 3.7, -37.85), Vector3(8.6, 1.1, 0.2), sign_keys[i], false)
-		_box(self, "MenuBoard_%02d" % i, Vector3(x, 2.65, -37.75), Vector3(7.6, 0.65, 0.12), "white", false)
-		# Display food props as colourful silhouettes until detailed food assets are added.
-		for j in range(3):
-			_box(self, "DisplayProp_%02d_%02d" % [i, j], Vector3(x - 2.6 + float(j) * 2.6, 1.85, -36.0), Vector3(0.75, 0.48, 0.45), sign_keys[i], false)
+		_box(self, "MenuBoardFrame_%02d" % i, Vector3(x, 2.65, -37.73), Vector3(7.8, 0.82, 0.14), "metal", false)
+		_box(self, "MenuBoard_%02d" % i, Vector3(x, 2.65, -37.63), Vector3(7.55, 0.62, 0.06), "screen", false)
+		for menu_item in range(4):
+			_box(self, "MenuItemLine_%d_%d" % [i, menu_item], Vector3(x - 2.4 + float(menu_item) * 1.55, 2.7, -37.585), Vector3(1.1, 0.035, 0.025), "white", false)
 		_box(self, "VendorNamePlate_%02d" % i, Vector3(x, 4.45, -37.85), Vector3(7.0, 0.1, 0.12), "white", false)
-	# Kiosks and pickup zone facing the food court.
+		# Display glass guard and metal posts in front of food.
+		_box(self, "DisplayGlass_%02d" % i, Vector3(x, 2.05, -35.95), Vector3(8.5, 0.75, 0.045), "glass", false)
+		for post_x in [-4.1, 4.1]:
+			_box(self, "DisplayPost_%02d" % i, Vector3(x + post_x, 2.05, -35.95), Vector3(0.07, 0.85, 0.07), "chrome", false)
+		_make_food_display(i, x, -36.2)
+	# Order kiosks have a sculpted pedestal, bezel, screen and status light.
 	for i in range(6):
 		var x := -17.5 + float(i) * 7.0
-		_box(self, "OrderKiosk_%02d" % i, Vector3(x, 1.45, -32.0), Vector3(1.2, 2.9, 0.8), "metal")
-		_box(self, "KioskScreen_%02d" % i, Vector3(x, 1.95, -32.45), Vector3(0.88, 1.1, 0.08), "sign_blue", false)
+		_box(self, "OrderKioskPedestal_%02d" % i, Vector3(x, 0.52, -32.0), Vector3(0.82, 1.0, 0.72), "metal")
+		_box(self, "OrderKioskBody_%02d" % i, Vector3(x, 1.45, -32.0), Vector3(1.0, 1.15, 0.62), "black")
+		_box(self, "KioskBezel_%02d" % i, Vector3(x, 1.78, -32.34), Vector3(0.83, 0.78, 0.06), "chrome", false)
+		_box(self, "KioskScreen_%02d" % i, Vector3(x, 1.78, -32.30), Vector3(0.72, 0.66, 0.035), "screen", false)
+		_box(self, "KioskUIHeader_%02d" % i, Vector3(x, 2.02, -32.275), Vector3(0.5, 0.035, 0.018), "sign_blue", false)
+		for ui_line in range(3):
+			_box(self, "KioskUILine_%d_%d" % [i, ui_line], Vector3(x, 1.87 - float(ui_line) * 0.12, -32.275), Vector3(0.45 - float(ui_line) * 0.05, 0.025, 0.018), "white", false)
+		_box(self, "KioskStatus_%02d" % i, Vector3(x + 0.32, 1.25, -32.32), Vector3(0.07, 0.07, 0.025), "lettuce", false)
 	_box(self, "PickupCounter", Vector3(0, 0.9, -28.8), Vector3(16, 1.3, 1.2), "wood")
-
+	_box(self, "PickupCounterTop", Vector3(0, 1.58, -28.8), Vector3(16.3, 0.12, 1.4), "chrome", false)
+	for i in range(4):
+		_box(self, "PickupCubby_%d" % i, Vector3(-5.7 + float(i) * 3.8, 1.05, -28.15), Vector3(3.0, 0.5, 0.06), "black", false)
 func _build_upper_gallery() -> void:
 	# Balcony-like gallery ledges and glass rails on both sides.
 	for side in [-1.0, 1.0]:
