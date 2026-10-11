@@ -11,6 +11,10 @@ extends CharacterBody3D
 
 var _camera: Camera3D
 var _pitch := 0.0
+var _camera_base_position := Vector3.ZERO
+var _camera_base_fov := 78.0
+var _bob_time := 0.0
+var _camera_effect_weight := 0.0
 var _blur_strength := 0.0
 var _blur_direction := Vector2.ZERO
 var _blur_material: ShaderMaterial
@@ -60,9 +64,31 @@ func _ready() -> void:
 		push_error("Player controller: PreviewCamera is missing.")
 		return
 	_pitch = _camera.rotation.x
+	_camera_base_position = _camera.position
+	_camera_base_fov = _camera.fov
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_add_motion_blur_overlay()
 	_setup_touch_controls()
+
+func _process(delta: float) -> void:
+	if _camera == null:
+		return
+	# Smooth first-person camera work: subtle walking bob, sprint FOV kick and body lean.
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var moving := clampf(horizontal_speed / maxf(walk_speed, 0.01), 0.0, 1.35)
+	var sprinting := 1.0 if (Input.is_key_pressed(KEY_SHIFT) or _touch_sprint_active) else 0.0
+	_bob_time += delta * (8.5 + horizontal_speed * 1.25)
+	_camera_effect_weight = move_toward(_camera_effect_weight, moving, delta * 5.0)
+	var bob_y := absf(sin(_bob_time)) * 0.035 * _camera_effect_weight
+	var bob_z := cos(_bob_time * 0.5) * 0.018 * _camera_effect_weight
+	var target_position := _camera_base_position + Vector3(0.0, bob_y, bob_z)
+	_camera.position = _camera.position.lerp(target_position, clampf(delta * 10.0, 0.0, 1.0))
+	var target_fov := _camera_base_fov + sprinting * 5.0 + moving * 1.5
+	_camera.fov = lerpf(_camera.fov, target_fov, clampf(delta * 4.5, 0.0, 1.0))
+	var local_side_speed := transform.basis.x.dot(Vector3(velocity.x, 0.0, velocity.z))
+	var target_lean := clampf(-local_side_speed * 0.012, -0.055, 0.055) * _camera_effect_weight
+	_camera.rotation.z = lerpf(_camera.rotation.z, target_lean, clampf(delta * 7.0, 0.0, 1.0))
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
