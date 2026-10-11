@@ -562,13 +562,13 @@ func _build_lighting() -> void:
 	env.ambient_light_energy = 0.32
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_BG
 	env.glow_enabled = true
-	env.glow_intensity = 0.22
-	env.glow_bloom = 0.08
+	env.glow_intensity = 0.38
+	env.glow_bloom = 0.12
 	env.ssao_enabled = true
 	env.ssao_radius = 2.2
-	env.ssao_intensity = 1.35
+	env.ssao_intensity = 1.55
 	env.ssr_enabled = true
-	env.ssr_max_steps = 48
+	env.ssr_max_steps = 64
 	env.adjustment_enabled = true
 	env.adjustment_contrast = 1.08
 	env.adjustment_saturation = 1.06
@@ -586,7 +586,7 @@ func _build_lighting() -> void:
 			var light := OmniLight3D.new()
 			light.position = Vector3(x, 8.8, z)
 			light.light_color = Color("ffe0b5")
-			light.light_energy = 1.05
+			light.light_energy = 1.2
 			light.shadow_enabled = true
 			light.omni_range = 16.0
 			add_child(light)
