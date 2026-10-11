@@ -15,6 +15,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Cache Godot's imported textures and Android export templates so repeat builds skip expensive work.
+      - name: Cache Godot imports
+        uses: actions/cache@v4
+        with:
+          path: .godot/imported
+          key: godot-imports-4.4.1-${{ hashFiles('project.godot', 'assets/textures/**', 'assets/models/**') }}
+
+      - name: Cache Godot Android export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/4.4.1.stable
+          key: godot-android-templates-4.4.1
+
+      - name: Cache generated Android Gradle template
+        uses: actions/cache@v4
+        with:
+          path: android/build
+          key: godot-android-gradle-template-4.4.1-v1
+
       - name: Install Java
         uses: actions/setup-java@v4
         with:
