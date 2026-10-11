@@ -99,7 +99,7 @@ jobs:
           [preset.0.options]
           custom_template/debug=""
           custom_template/release=""
-          gradle_build/use_gradle_build=true
+          gradle_build/use_gradle_build=false
           gradle_build/export_format=0
           gradle_build/min_sdk=24
           gradle_build/target_sdk=34
@@ -161,6 +161,7 @@ jobs:
             godot --headless --editor --path . --import --quit-after 5
 
       - name: Install project Android build template
+        if: false # Gradle export is disabled; Godot exports directly with its Android templates.
         timeout-minutes: 3
         shell: bash
         run: |
