@@ -10,15 +10,15 @@ A mobile 3D mukbang game prototype made with Godot 4.
 - Eight food counters, menu boards, food displays and order kiosks
 - Procedural furniture, floor tile seams, architectural trim and real-time lighting
 
-## PBR texture library (512×512)
+## PBR texture library (2K, Android-conscious)
 
-Dedicated reusable texture sets live in `assets/textures/pbr/`. Each material has four PNG maps:
+Dedicated reusable texture sets live in `assets/textures/pbr/`. Each material has four 2048×2048 SVG source maps (rasterized by Godot during import):
 - `food_*`: fine food-surface variation; neutral base colour keeps per-ingredient colours in the game
 - `wood_*`: directional wood grain
 - `ceramic_*`: glazed ceramic with lower roughness
 - `metal_*`: brushed metal with a metallic map
 
-For each family, `basecolor_512.png`, `roughness_512.png`, `normal_512.png`, and `metallic_512.png` are used by the Godot `StandardMaterial3D` resources in `scripts/mall.gd`. Mapped materials include burger ingredients, fries, cups, wood table surfaces, ceramic dishes, metal trims and chrome parts. These are procedural 512×512 game textures, not scans or commercially authored texture packs.
+For each family, `basecolor_2k.svg`, `roughness_2k.svg`, `normal_2k.svg`, and `metallic_2k.svg` are used by `StandardMaterial3D` in `scripts/mall.gd`. The material filter requests anisotropic mipmapped sampling. SVG sources keep the Git repository small; Godot rasterizes them and caches imported textures. Mapped materials include burger ingredients, fries, cups, wood table surfaces, ceramic dishes, metal trims and chrome parts. These are procedural vector-authored texture maps, not scans or commercially authored texture packs. The maps are tiled and intentionally subtle to keep the Android texture budget manageable.
 
 Imported GLB props remain at:
 - `assets/models/burger_combo.glb`
