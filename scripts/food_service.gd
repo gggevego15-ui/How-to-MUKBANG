@@ -417,7 +417,10 @@ func _eat_one() -> void:
 	var bites_left := int(food.get_meta("bites_left", BITES_PER_SERVING))
 	food.set_meta("bites_left", bites_left)
 	_animate_hand_for_food(food, true)
-	_play_bite_sound(food)
+	if str(food.get_meta("food_category", "")) == "НАПИТКИ":
+		_play_action_sound("sip", food)
+	else:
+		_play_bite_sound(food)
 	var tween := create_tween()
 	tween.set_parallel(true)
 	var mouth_position := _camera.global_position + (-_camera.global_transform.basis.z * 0.62) + Vector3.UP * -0.20 if _camera != null else original_position + Vector3.UP * 0.5
@@ -431,6 +434,8 @@ func _eat_one() -> void:
 			return
 		bites_left -= 1
 		food.set_meta("bites_left", bites_left)
+		if str(food.get_meta("food_category", "")) != "НАПИТКИ":
+			_play_action_sound("chew", food)
 		_animate_chewing()
 		_spawn_bite_effects(food)
 		_fullness = mini(_fullness + int(ceil(12.0 / float(BITES_PER_SERVING))), 100)
@@ -462,6 +467,8 @@ func _eat_one() -> void:
 			)
 		else:
 			_servings.pop_front()
+			if str(food.get_meta("food_category", "")) != "НАПИТКИ":
+				_play_action_sound("swallow", food)
 			var remove_tween := create_tween()
 			remove_tween.set_parallel(true)
 			remove_tween.tween_property(food, "scale", Vector3.ONE * 0.015, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
@@ -539,6 +546,75 @@ func _play_bite_sound(food: Node3D) -> void:
 	add_child(player)
 	player.finished.connect(player.queue_free)
 	player.play()
+
+## Generates a short action-specific sound locally; no audio assets or network are required.
+func _play_action_sound(action: String, food: Node3D) -> void:
+	var product := str(food.get_meta("food_product", "Еда"))
+	var category := str(food.get_meta("food_category", "ФАСТФУД"))
+	var stream := _make_action_stream(action, product, category)
+	var player := AudioStreamPlayer.new()
+	player.name = "EatingActionSound"
+	player.stream = stream
+	player.volume_db = -7.0 if action == "chew" else -4.5
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+
+func _make_action_stream(action: String, product: String, category: String) -> AudioStreamWAV:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var duration := 0.42
+	if action == "swallow":
+		duration = 0.34
+	elif action == "sip":
+		duration = 0.95
+	elif category == "КУРОЧКА" or product == "Картошка фри":
+		duration = 0.50
+	var count := int(BITE_SAMPLE_RATE * duration)
+	var pcm := PackedByteArray()
+	pcm.resize(count * 2)
+	var phase := rng.randf_range(0.0, TAU)
+	var pitch := 1.0
+	if action == "sip":
+		pitch = 1.35 if product == "Кола" or product == "Лимонад" else 0.92
+	elif action == "swallow":
+		pitch = 0.72
+	elif category == "КУРОЧКА" or product == "Картошка фри":
+		pitch = 1.2
+	for i in range(count):
+		var t := float(i) / float(BITE_SAMPLE_RATE)
+		var progress := t / duration
+		var envelope := 0.0
+		var tone := 0.0
+		var noise := rng.randf_range(-1.0, 1.0)
+		if action == "chew":
+			# Two soft, irregular jaw sounds with a little food texture.
+			var pulse := pow(maxf(0.0, sin(TAU * (2.4 + 0.25 * sin(t * 8.0)) * t)), 5.0)
+			envelope = minf(t / 0.035, 1.0) * maxf(0.0, 1.0 - progress)
+			tone = sin(TAU * (92.0 * pitch + 12.0 * sin(t * 13.0)) * t + phase) * 0.16
+			var texture := noise * (0.11 if category == "КУРОЧКА" or product == "Картошка фри" else 0.035)
+			tone = (tone + texture) * pulse
+		elif action == "swallow":
+			# A gentle descending, resonant gulp with a soft transient.
+			envelope = minf(t / 0.025, 1.0) * maxf(0.0, 1.0 - progress)
+			var glide := lerpf(185.0, 112.0, progress) * pitch
+			tone = sin(TAU * glide * t + phase) * 0.22 + sin(TAU * glide * 0.52 * t) * 0.08
+			tone += noise * 0.025 * exp(-t * 20.0)
+		else:
+			# Smooth liquid draw, tiny bubbles, and optional sparkling fizz.
+			envelope = minf(t / 0.06, 1.0) * minf(maxf(0.0, (1.0 - progress) * 1.6), 1.0)
+			var flow := sin(TAU * (155.0 + 18.0 * sin(t * 9.0)) * pitch * t + phase) * 0.10
+			var bubbles := maxf(0.0, sin(TAU * (7.0 + 2.0 * sin(t * 4.0)) * t)) * 0.08
+			var fizz := noise * 0.045 if product == "Кола" or product == "Лимонад" else noise * 0.012
+			tone = flow + bubbles + fizz
+		var value := clampf((tone + noise * 0.012) * envelope, -0.8, 0.8)
+		pcm.encode_s16(i * 2, int(value * 32767.0))
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = BITE_SAMPLE_RATE
+	stream.stereo = false
+	stream.data = pcm
+	return stream
 
 func _make_bite_stream(product: String, category: String) -> AudioStreamWAV:
 	var rng := RandomNumberGenerator.new()
