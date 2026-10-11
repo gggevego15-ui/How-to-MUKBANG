@@ -582,6 +582,39 @@ func _build_npc_visitors() -> void:
 		visitor.position = route[i % route.size()]
 		add_child(visitor)
 
+
+	# Four visible food queues, with three visitors each. Slot 0 is nearest the counter.
+	# Queue visitors share a vendor group, so service happens one customer at a time.
+	var queue_vendor_indices: Array[int] = [1, 3, 5, 7]
+	for vendor_index in queue_vendor_indices:
+		var vendor_x := -40.0 + float(vendor_index) * 11.4
+		for slot in range(3):
+			var visitor := Node3D.new()
+			visitor.name = "FoodQueue_Vendor%02d_Slot%02d" % [vendor_index, slot]
+			visitor.set_script(load("res://scripts/npc_visitor.gd"))
+			var queue_x := vendor_x + (float(slot) - 1.0) * 0.62
+			var queue_z := -33.0 + float(slot) * 2.25
+			var route: Array[Vector3] = [
+				Vector3(queue_x, 0, queue_z),
+				Vector3(vendor_x, 0, -34.55),
+				Vector3(vendor_x + 2.7, 0, -25.7),
+				Vector3(vendor_x + 4.0, 0, -23.8)
+			]
+			visitor.set("waypoints", route)
+			visitor.set("walk_speed", 0.82 + float(slot) * 0.08)
+			visitor.set("outfit_color", outfit_colors[(vendor_index + slot) % outfit_colors.size()])
+			visitor.set("skin_color", Color("d7a17e") if (vendor_index + slot) % 3 != 0 else Color("8e5b43"))
+			visitor.set("queue_mode", true)
+			visitor.set("queue_vendor_index", vendor_index)
+			visitor.set("queue_slot", slot)
+			visitor.set("queue_waypoint_index", 0)
+			visitor.set("service_waypoint_index", 1)
+			visitor.set("queue_wait_seconds", 1.6 + float(slot) * 0.25)
+			visitor.set("service_wait_seconds", 2.2)
+			visitor.set("start_waypoint", 0)
+			visitor.position = route[0]
+			add_child(visitor)
+
 	# A smaller group walks through open street-shop entrances, pauses inside,
 	# and heads back out onto the wet sidewalk.
 	for i in range(6):
