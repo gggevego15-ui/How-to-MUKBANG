@@ -81,6 +81,8 @@ jobs:
           custom_template/release=""
           gradle_build/use_gradle_build=false
           gradle_build/export_format=0
+          gradle_build/min_sdk=""
+          gradle_build/target_sdk=""
           architectures/armeabi-v7a=false
           architectures/arm64-v8a=true
           architectures/x86=false
@@ -107,7 +109,7 @@ jobs:
           screen/support_normal=true
           screen/support_large=true
           screen/support_xlarge=true
-          user_data/backup=false
+          user_data_backup/allow=false
           permissions/internet=false
           EOF
           mkdir -p build
@@ -122,7 +124,10 @@ jobs:
         run: godot --headless --path . --script res://scripts/validate_pbr.gd
 
       - name: Export Android APK
-        run: godot --headless --path . --export-debug "Android" build/How-to-MUKBANG-0.2.0-beta.2.apk
+        shell: bash
+        run: |
+          set -o pipefail
+          godot --headless --path . --export-debug "Android" build/How-to-MUKBANG-0.2.0-beta.2.apk 2>&1 | tee build/android-export.log
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
