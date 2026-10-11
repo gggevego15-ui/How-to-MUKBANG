@@ -103,7 +103,7 @@ jobs:
       - name: Validate project and import assets
         run: godot --headless --editor --path . --import --quit
 
-      - name: Validate 2K PBR texture imports
+      - name: Validate 4K PBR texture imports
         run: godot --headless --path . --script res://scripts/validate_pbr.gd
 
       - name: Export Android APK
