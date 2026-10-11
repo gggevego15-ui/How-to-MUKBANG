@@ -6,17 +6,9 @@ const CYCLE_SECONDS := 1.7
 var rings: Array[MeshInstance3D] = []
 var elapsed := 0.0
 var centers: Array[Vector3] = []
-var ripple_material: StandardMaterial3D
 
 func _ready() -> void:
 	set_process(true)
-	ripple_material = StandardMaterial3D.new()
-	ripple_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	ripple_material.albedo_color = Color(0.55, 0.78, 0.95, 0.52)
-	ripple_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	ripple_material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	ripple_material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
-	ripple_material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	for i in range(RING_COUNT):
 		var torus := TorusMesh.new()
 		torus.inner_radius = 0.13
@@ -26,8 +18,14 @@ func _ready() -> void:
 		var ring := MeshInstance3D.new()
 		ring.name = "RainRipple_%02d" % i
 		ring.mesh = torus
-		ring.material_override = ripple_material
-		ring.rotation_degrees.x = 90.0
+		var ring_material := StandardMaterial3D.new()
+		ring_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		ring_material.albedo_color = Color(0.55, 0.78, 0.95, 0.52)
+		ring_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		ring_material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		ring_material.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		ring_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+		ring.material_override = ring_material
 		ring.visible = false
 		add_child(ring)
 		rings.append(ring)
@@ -52,5 +50,5 @@ func _process(delta: float) -> void:
 		ring.visible = phase < 0.88
 		var radius := lerpf(0.16, 0.78, phase)
 		ring.scale = Vector3(radius, radius, radius)
-		var color := Color(0.55, 0.78, 0.95, (1.0 - phase) * 0.48)
-		ripple_material.albedo_color = color
+		var ring_material := ring.material_override as StandardMaterial3D
+		ring_material.albedo_color = Color(0.55, 0.78, 0.95, (1.0 - phase) * 0.48)
