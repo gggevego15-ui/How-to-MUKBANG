@@ -1,5 +1,7 @@
 # How to MUKBANG
 
+**Current beta target: `0.2.0-beta.1`** — visual polish, first-person camera animation, and Android test build.
+
 A mobile 3D mukbang game prototype made with Godot 4.
 
 ## Current milestone: shopping mall food court
