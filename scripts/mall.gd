@@ -17,6 +17,7 @@ func _ready() -> void:
 	_build_upper_gallery()
 	_build_decor()
 	_build_lighting()
+	_build_player_camera()
 
 func _material(key: String, color: Color, roughness: float = 0.7, metallic: float = 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -206,3 +207,31 @@ func _build_lighting() -> void:
 			light.light_energy = 1.25
 			light.omni_range = 16.0
 			add_child(light)
+
+func _build_player_camera() -> void:
+	var rig := CharacterBody3D.new()
+	rig.name = "PlayerPreview"
+	rig.position = Vector3(0, 0.1, 36.0)
+	add_child(rig)
+	var collision := CollisionShape3D.new()
+	var capsule := CapsuleShape3D.new()
+	capsule.radius = 0.34
+	capsule.height = 1.75
+	collision.shape = capsule
+	collision.position.y = 0.88
+	rig.add_child(collision)
+	var body_mesh := MeshInstance3D.new()
+	var capsule_mesh := CapsuleMesh.new()
+	capsule_mesh.radius = 0.32
+	capsule_mesh.height = 1.65
+	body_mesh.mesh = capsule_mesh
+	body_mesh.position.y = 0.84
+	body_mesh.material_override = mats["sign_blue"]
+	rig.add_child(body_mesh)
+	var camera := Camera3D.new()
+	camera.name = "PreviewCamera"
+	camera.position = Vector3(0, 1.62, 0)
+	camera.rotation_degrees = Vector3(-7, 180, 0)
+	camera.fov = 78.0
+	camera.current = true
+	rig.add_child(camera)
