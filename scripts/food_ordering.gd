@@ -35,6 +35,14 @@ var _items_box: VBoxContainer
 var _mobile_order_button: Button
 var _status_label: Label
 var _food_service: Node
+var _panel: PanelContainer
+var _shade: ColorRect
+var _columns: HBoxContainer
+var _list_panel: PanelContainer
+var _cart_panel: PanelContainer
+var _category_bar: HBoxContainer
+var _active_category := "ВСЁ"
+var _product_count_label: Label
 
 func _ready() -> void:
 	_player = get_parent().get_node_or_null("Player") as CharacterBody3D
@@ -45,6 +53,35 @@ func _ready() -> void:
 	_build_ui()
 	_food_service.delivery_started.connect(_on_delivery_started)
 	_food_service.delivery_completed.connect(_on_delivery_completed)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED:
+		call_deferred("_layout_order_ui")
+
+func _layout_order_ui() -> void:
+	if _panel == null or _columns == null:
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	var compact := viewport_size.x < 1050.0 or viewport_size.y < 700.0
+	var margin := 18.0
+	_panel.position = Vector2(margin, margin)
+	_panel.size = Vector2(maxf(320.0, viewport_size.x - margin * 2.0), maxf(280.0, viewport_size.y - margin * 2.0))
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_panel.position = Vector2(margin, margin)
+	_panel.size = Vector2(maxf(320.0, viewport_size.x - margin * 2.0), maxf(280.0, viewport_size.y - margin * 2.0))
+	_columns.vertical = compact
+	if compact:
+		_list_panel.custom_minimum_size = Vector2(0, maxf(125.0, viewport_size.y * 0.31))
+		_cart_panel.custom_minimum_size = Vector2(0, 0)
+		_cart_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_cart_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	else:
+		_list_panel.custom_minimum_size = Vector2(0, 0)
+		_cart_panel.custom_minimum_size = Vector2(230, 0)
+		_cart_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+		_cart_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	if _category_bar != null:
+		_category_bar.add_theme_constant_override("separation", 6 if compact else 10)
 
 func _process(_delta: float) -> void:
 	if _player == null:
@@ -94,37 +131,37 @@ func _build_ui() -> void:
 	_mobile_order_button.pressed.connect(_open_menu)
 	_root.add_child(_mobile_order_button)
 
-	var shade := ColorRect.new()
-	shade.name = "OrderBackdrop"
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.color = Color(0.015, 0.025, 0.05, 0.72)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	_root.add_child(shade)
-	shade.visible = false
+	_shade = ColorRect.new()
+	_shade.name = "OrderBackdrop"
+	_shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_shade.color = Color(0.015, 0.025, 0.05, 0.82)
+	_shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	_root.add_child(_shade)
+	_shade.visible = false
 
-	var panel := PanelContainer.new()
-	panel.name = "OrderPanel"
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.position = Vector2(-350, -300)
-	panel.size = Vector2(700, 600)
-	panel.custom_minimum_size = Vector2(700, 600)
+	_panel = PanelContainer.new()
+	_panel.name = "OrderPanel"
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_panel.position = Vector2(18, 18)
+	_panel.size = Vector2(900, 700)
+	_panel.custom_minimum_size = Vector2(0, 0)
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.035, 0.055, 0.09, 0.98)
-	panel_style.border_color = Color("4fcdf5")
+	panel_style.bg_color = Color(0.025, 0.045, 0.075, 0.99)
+	panel_style.border_color = Color(0.22, 0.78, 0.96, 0.9)
 	panel_style.set_border_width_all(2)
-	panel_style.set_corner_radius_all(22)
+	panel_style.set_corner_radius_all(24)
 	panel_style.content_margin_left = 22
 	panel_style.content_margin_right = 22
-	panel_style.content_margin_top = 20
+	panel_style.content_margin_top = 18
 	panel_style.content_margin_bottom = 18
-	panel.add_theme_stylebox_override("panel", panel_style)
-	panel.visible = false
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_root.add_child(panel)
+	_panel.add_theme_stylebox_override("panel", panel_style)
+	_panel.visible = false
+	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_root.add_child(_panel)
 
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 10)
-	panel.add_child(content)
+	_panel.add_child(content)
 
 	var top := HBoxContainer.new()
 	content.add_child(top)
@@ -143,12 +180,26 @@ func _build_ui() -> void:
 	subtitle.add_theme_color_override("font_color", Color("a9bbd0"))
 	content.add_child(subtitle)
 
+	_category_bar = HBoxContainer.new()
+	_category_bar.add_theme_constant_override("separation", 8)
+	content.add_child(_category_bar)
+	for category_name in ["ВСЁ", "КУРОЧКА", "РОЛЛЫ", "ФАСТФУД", "НАПИТКИ", "ДЕСЕРТЫ"]:
+		var category_button := Button.new()
+		category_button.text = str(category_name)
+		category_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		category_button.custom_minimum_size.y = 38
+		_style_button(category_button, category_name == _active_category)
+		category_button.pressed.connect(_select_category.bind(str(category_name)))
+		_category_bar.add_child(category_button)
+
 	var columns := HBoxContainer.new()
+	_columns = columns
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	columns.add_theme_constant_override("separation", 16)
+	columns.add_theme_constant_override("separation", 14)
 	content.add_child(columns)
 
 	var list_panel := PanelContainer.new()
+	_list_panel = list_panel
 	list_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var list_style := StyleBoxFlat.new()
@@ -165,7 +216,8 @@ func _build_ui() -> void:
 	scroll.add_child(_items_box)
 
 	var cart_panel := PanelContainer.new()
-	cart_panel.custom_minimum_size.x = 220
+	_cart_panel = cart_panel
+	cart_panel.custom_minimum_size.x = 230
 	var cart_style := StyleBoxFlat.new()
 	cart_style.bg_color = Color(0.07, 0.10, 0.15, 1)
 	cart_style.set_corner_radius_all(12)
@@ -175,14 +227,18 @@ func _build_ui() -> void:
 	cart_box.add_theme_constant_override("separation", 10)
 	cart_panel.add_child(cart_box)
 	var cart_heading := Label.new()
-	cart_heading.text = "ТВОЯ КОРЗИНА"
+	cart_heading.text = "🛒  ТВОЯ КОРЗИНА"
 	cart_heading.add_theme_color_override("font_color", Color("8ceaff"))
 	cart_box.add_child(cart_heading)
 	_cart_label = Label.new()
-	_cart_label.custom_minimum_size = Vector2(190, 180)
+	_cart_label.custom_minimum_size = Vector2(190, 120)
 	_cart_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_cart_label.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	cart_box.add_child(_cart_label)
+	_product_count_label = Label.new()
+	_product_count_label.text = "18 позиций в меню"
+	_product_count_label.add_theme_color_override("font_color", Color("8da6bf"))
+	cart_box.add_child(_product_count_label)
 	_status_label = Label.new()
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status_label.add_theme_color_override("font_color", Color("9ef0bc"))
@@ -210,11 +266,12 @@ func _build_ui() -> void:
 	close_button.pressed.connect(_close_menu)
 	cart_box.add_child(close_button)
 
-	# Store references to the shade and panel for toggling visibility.
-	set_meta("order_shade", shade)
-	set_meta("order_panel", panel)
+	# Keep direct references for reliable visibility and responsive layout.
+	set_meta("order_shade", _shade)
+	set_meta("order_panel", _panel)
 	_refresh_products()
 	_refresh_cart()
+	_layout_order_ui()
 
 func _style_button(button: Button, primary: bool) -> void:
 	button.focus_mode = Control.FOCUS_NONE
@@ -230,34 +287,67 @@ func _style_button(button: Button, primary: bool) -> void:
 	button.add_theme_stylebox_override("hover", hover)
 	button.add_theme_color_override("font_color", Color("f4f9ff"))
 
+func _select_category(category_name: String) -> void:
+	_active_category = category_name
+	for child in _category_bar.get_children():
+		if child is Button:
+			_style_button(child, child.text == _active_category)
+	_refresh_products()
+
 func _refresh_products() -> void:
 	for child in _items_box.get_children():
 		child.queue_free()
-	var categories := ["КУРОЧКА", "РОЛЛЫ", "ФАСТФУД", "НАПИТКИ", "ДЕСЕРТЫ"]
-	for category in categories:
-		var category_label := Label.new()
-		category_label.text = "— " + category + " —"
-		category_label.add_theme_color_override("font_color", Color("67d9ff"))
-		category_label.add_theme_font_size_override("font_size", 15)
-		_items_box.add_child(category_label)
-		for i in range(PRODUCTS.size()):
-			var item: Dictionary = PRODUCTS[i]
-			if item["category"] != category:
-				continue
-			var row := HBoxContainer.new()
-			row.add_theme_constant_override("separation", 8)
-			_items_box.add_child(row)
-			var label := Label.new()
-			label.text = str(item["emoji"]) + "  " + str(item["name"]) + "  •  " + str(item["price"]) + " ₽"
-			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			label.add_theme_font_size_override("font_size", 13)
-			row.add_child(label)
-			var add_button := Button.new()
-			add_button.text = "+ ДОБАВИТЬ"
-			add_button.custom_minimum_size = Vector2(105, 34)
-			_style_button(add_button, false)
-			add_button.pressed.connect(_add_to_cart.bind(i))
-			row.add_child(add_button)
+	var shown := 0
+	for i in range(PRODUCTS.size()):
+		var item: Dictionary = PRODUCTS[i]
+		if _active_category != "ВСЁ" and item["category"] != _active_category:
+			continue
+		shown += 1
+		var card := PanelContainer.new()
+		var card_style := StyleBoxFlat.new()
+		card_style.bg_color = Color(0.07, 0.105, 0.15, 1.0)
+		card_style.border_color = Color(0.15, 0.27, 0.36, 1.0)
+		card_style.set_border_width_all(1)
+		card_style.set_corner_radius_all(12)
+		card_style.content_margin_left = 12
+		card_style.content_margin_right = 12
+		card_style.content_margin_top = 8
+		card_style.content_margin_bottom = 8
+		card.add_theme_stylebox_override("panel", card_style)
+		_items_box.add_child(card)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		card.add_child(row)
+		var emoji := Label.new()
+		emoji.text = str(item["emoji"])
+		emoji.custom_minimum_size = Vector2(42, 42)
+		emoji.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		emoji.add_theme_font_size_override("font_size", 27)
+		row.add_child(emoji)
+		var details := VBoxContainer.new()
+		details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		details.add_theme_constant_override("separation", 2)
+		row.add_child(details)
+		var label := Label.new()
+		label.text = str(item["name"])
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.add_theme_font_size_override("font_size", 15)
+		label.add_theme_color_override("font_color", Color("f2f7ff"))
+		details.add_child(label)
+		var price := Label.new()
+		price.text = str(item["price"]) + " ₽  ·  " + str(item["category"])
+		price.add_theme_font_size_override("font_size", 12)
+		price.add_theme_color_override("font_color", Color("8ba9c3"))
+		details.add_child(price)
+		var add_button := Button.new()
+		add_button.text = "+"
+		add_button.custom_minimum_size = Vector2(48, 44)
+		add_button.add_theme_font_size_override("font_size", 24)
+		_style_button(add_button, true)
+		add_button.pressed.connect(_add_to_cart.bind(i))
+		row.add_child(add_button)
+	if _product_count_label != null:
+		_product_count_label.text = str(shown) + (" позиций" if shown != 1 else " позиция")
 
 func _add_to_cart(index: int) -> void:
 	var item: Dictionary = PRODUCTS[index]
@@ -316,8 +406,9 @@ func _on_delivery_completed() -> void:
 
 func _open_menu() -> void:
 	_menu_open = true
-	get_meta("order_shade").visible = true
-	get_meta("order_panel").visible = true
+	_shade.visible = true
+	_panel.visible = true
+	_layout_order_ui()
 	_mobile_order_button.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if _player != null:
@@ -327,8 +418,8 @@ func _open_menu() -> void:
 
 func _close_menu() -> void:
 	_menu_open = false
-	get_meta("order_shade").visible = false
-	get_meta("order_panel").visible = false
+	_shade.visible = false
+	_panel.visible = false
 	_hint.visible = _near_kiosk
 	_mobile_order_button.visible = false
 	if _player != null:
