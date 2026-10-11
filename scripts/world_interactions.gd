@@ -105,6 +105,29 @@ func _interact() -> void:
 			bench_tween.tween_property(bench, "scale", original_scale * Vector3(1.0, 1.22, 1.0), 0.16)
 			bench_tween.tween_property(bench, "scale", original_scale, 0.22)
 			_show_toast("Скамейка — можно передохнуть")
+		"vending":
+			var drink := _active_target.get_node_or_null("DispensedDrink") as Node3D
+			if drink != null:
+				drink.visible = true
+				drink.scale = Vector3.ZERO
+				drink.position.y = 0.42
+				var dispense_tween := create_tween()
+				dispense_tween.set_trans(Tween.TRANS_BACK)
+				dispense_tween.set_ease(Tween.EASE_OUT)
+				dispense_tween.tween_property(drink, "scale", Vector3.ONE, 0.22)
+				dispense_tween.tween_property(drink, "position:y", 0.72, 0.25)
+				dispense_tween.tween_property(drink, "position:y", 0.42, 0.18)
+			_show_toast("Напиток выдан! 🍹")
+		"bin":
+			var lid_pivot := _active_target.get_node_or_null("LidPivot") as Node3D
+			if lid_pivot != null:
+				var lid_open := absf(lid_pivot.rotation.x) > 0.6
+				var lid_angle := 0.0 if lid_open else -1.15
+				var lid_tween := create_tween()
+				lid_tween.set_trans(Tween.TRANS_BACK)
+				lid_tween.set_ease(Tween.EASE_OUT)
+				lid_tween.tween_property(lid_pivot, "rotation:x", lid_angle, 0.28)
+				_show_toast("Урна закрыта" if lid_open else "Крышка урны открылась")
 	_active_target = null
 
 func _build_interaction_ui() -> void:
