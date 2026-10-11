@@ -129,6 +129,8 @@ func serve(ordered_items: Array, products: Array, player: CharacterBody3D) -> vo
 	tray_tween.tween_property(_tray, "scale", Vector3.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _nearest_table() -> Vector3:
+	if _player != null and _player.has_meta("seated_table_position"):
+		return _player.get_meta("seated_table_position") as Vector3
 	var best := Vector3(0, 0, -38)
 	var best_distance := INF
 	for row in range(6):
