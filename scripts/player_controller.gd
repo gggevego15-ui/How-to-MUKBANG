@@ -18,6 +18,8 @@ var _camera_effect_weight := 0.0
 var _blur_strength := 0.0
 var _blur_direction := Vector2.ZERO
 var _blur_material: ShaderMaterial
+var _is_seated := false
+var _seat_camera_offset := 0.0
 
 # Touch controls are created at runtime, so the same scene works on desktop and Android.
 var _touch_move_index := -1
@@ -81,8 +83,9 @@ func _process(delta: float) -> void:
 	_camera_effect_weight = move_toward(_camera_effect_weight, moving, delta * 5.0)
 	var bob_y := absf(sin(_bob_time)) * 0.035 * _camera_effect_weight
 	var bob_z := cos(_bob_time * 0.5) * 0.018 * _camera_effect_weight
-	var target_position := _camera_base_position + Vector3(0.0, bob_y, bob_z)
-	_camera.position = _camera.position.lerp(target_position, clampf(delta * 10.0, 0.0, 1.0))
+	var sitting_offset := -0.34 if _is_seated else 0.0
+	var target_position := _camera_base_position + Vector3(0.0, sitting_offset + bob_y, bob_z)
+	_camera.position = _camera.position.lerp(target_position, clampf(delta * 5.0, 0.0, 1.0))
 	var target_fov := _camera_base_fov + sprinting * 5.0 + moving * 1.5
 	_camera.fov = lerpf(_camera.fov, target_fov, clampf(delta * 4.5, 0.0, 1.0))
 	var local_side_speed := transform.basis.x.dot(Vector3(velocity.x, 0.0, velocity.z))
@@ -261,7 +264,26 @@ func _reset_stick_visuals() -> void:
 	_stick_base.position = center - _stick_base.size * 0.5
 	_stick_knob.position = center - _stick_knob.size * 0.5
 
+func set_seated(seated: bool, seat_position: Vector3 = Vector3.ZERO, facing_y: float = 0.0, table_position: Vector3 = Vector3.ZERO) -> void:
+	_is_seated = seated
+	if seated:
+		global_position = seat_position
+		global_rotation.y = facing_y
+		velocity = Vector3.ZERO
+		set_meta("seated_table_position", table_position)
+	else:
+		velocity = Vector3.ZERO
+		global_position += -global_transform.basis.z * -0.65 + global_transform.basis.x * 0.15
+		if has_meta("seated_table_position"):
+			remove_meta("seated_table_position")
+
+func is_seated() -> bool:
+	return _is_seated
+
 func _physics_process(delta: float) -> void:
+	if _is_seated:
+		velocity = Vector3.ZERO
+		return
 	if not is_on_floor():
 		velocity += get_gravity() * delta
 	if (Input.is_key_pressed(KEY_SPACE) or _touch_jump_requested) and is_on_floor():
