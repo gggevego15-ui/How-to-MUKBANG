@@ -38,6 +38,7 @@ var _touch_sprint_active := false
 
 const STICK_RADIUS := 66.0
 const STICK_MAX_TRAVEL := 48.0
+const STICK_DEADZONE := 0.12
 
 const BLUR_SHADER := """
 shader_type canvas_item;
@@ -71,6 +72,17 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_add_motion_blur_overlay()
 	_setup_touch_controls()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_RESIZED and _touch_ui != null:
+		call_deferred("_relayout_touch_controls")
+
+func _relayout_touch_controls() -> void:
+	if _touch_ui == null:
+		return
+	_layout_action_buttons()
+	if _touch_move_index == -1:
+		_reset_stick_visuals()
 
 func _process(delta: float) -> void:
 	if _camera == null:
@@ -140,7 +152,12 @@ func _input(event: InputEvent) -> void:
 			var offset := drag.position - _touch_move_origin
 			if offset.length() > STICK_MAX_TRAVEL:
 				offset = offset.normalized() * STICK_MAX_TRAVEL
-			_touch_move_vector = Vector2(offset.x / STICK_MAX_TRAVEL, offset.y / STICK_MAX_TRAVEL)
+			var strength := offset.length() / STICK_MAX_TRAVEL
+			if strength <= STICK_DEADZONE:
+				_touch_move_vector = Vector2.ZERO
+			else:
+				var scaled_strength := inverse_lerp(STICK_DEADZONE, 1.0, minf(strength, 1.0))
+				_touch_move_vector = offset.normalized() * scaled_strength
 			_update_stick_visuals(_touch_move_origin, offset)
 		elif drag.index == _touch_look_index and _camera != null:
 			var motion := drag.position - _touch_look_last
@@ -221,8 +238,11 @@ func _layout_action_buttons() -> void:
 	if _touch_ui == null or _jump_button == null or _sprint_button == null:
 		return
 	var viewport_size := get_viewport().get_visible_rect().size
-	_jump_button.position = Vector2(viewport_size.x - 116.0, viewport_size.y - 198.0)
-	_sprint_button.position = Vector2(viewport_size.x - 224.0, viewport_size.y - 112.0)
+	var scale_factor := clampf(minf(viewport_size.x / 960.0, viewport_size.y / 540.0), 0.78, 1.35)
+	_jump_button.size = Vector2(92.0, 64.0) * scale_factor
+	_sprint_button.size = Vector2(92.0, 64.0) * scale_factor
+	_jump_button.position = Vector2(viewport_size.x - _jump_button.size.x - 28.0 * scale_factor, viewport_size.y - _jump_button.size.y - 42.0 * scale_factor)
+	_sprint_button.position = Vector2(viewport_size.x - _sprint_button.size.x - 124.0 * scale_factor, viewport_size.y - _sprint_button.size.y - 28.0 * scale_factor)
 
 func _is_touch_button_position(point: Vector2) -> bool:
 	return (_jump_button != null and _jump_button.get_global_rect().has_point(point)) or (_sprint_button != null and _sprint_button.get_global_rect().has_point(point))
@@ -260,7 +280,7 @@ func _reset_stick_visuals() -> void:
 	if _stick_base == null or _stick_knob == null:
 		return
 	var size := get_viewport().get_visible_rect().size
-	var center := Vector2(104.0, size.y - 112.0)
+	var center := Vector2(clampf(size.x * 0.115, 82.0, 130.0), size.y - clampf(size.y * 0.22, 100.0, 142.0))
 	_stick_base.position = center - _stick_base.size * 0.5
 	_stick_knob.position = center - _stick_knob.size * 0.5
 
@@ -299,14 +319,15 @@ func _physics_process(delta: float) -> void:
 	if _touch_move_index != -1:
 		input_vector = _touch_move_vector
 
+	if input_vector.length() > 1.0:
+		input_vector = input_vector.normalized()
 	var move_direction := (transform.basis * Vector3(input_vector.x, 0.0, input_vector.y)).normalized()
 	var speed := sprint_speed if (Input.is_key_pressed(KEY_SHIFT) or _touch_sprint_active) else walk_speed
-	if move_direction.length_squared() > 0.0:
-		velocity.x = move_direction.x * speed
-		velocity.z = move_direction.z * speed
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, walk_speed * 7.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, walk_speed * 7.0 * delta)
+	var acceleration := 18.0 if move_direction.length_squared() > 0.0 else walk_speed * 7.0
+	var target_x := move_direction.x * speed
+	var target_z := move_direction.z * speed
+	velocity.x = move_toward(velocity.x, target_x, acceleration * delta)
+	velocity.z = move_toward(velocity.z, target_z, acceleration * delta)
 	move_and_slide()
 
 	_blur_strength = move_toward(_blur_strength, 0.0, blur_fade_speed * delta)
