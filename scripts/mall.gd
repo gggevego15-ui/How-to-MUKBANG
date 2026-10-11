@@ -231,7 +231,7 @@ func _build_player_camera() -> void:
 	var camera := Camera3D.new()
 	camera.name = "PreviewCamera"
 	camera.position = Vector3(0, 1.62, 0)
-	camera.rotation_degrees = Vector3(-7, 180, 0)
+	camera.rotation_degrees = Vector3(-7, 0, 0)
 	camera.fov = 78.0
 	camera.current = true
 	rig.add_child(camera)
