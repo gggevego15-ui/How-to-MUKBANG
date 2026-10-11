@@ -71,7 +71,7 @@ jobs:
           export_filter="all_resources"
           include_filter=""
           exclude_filter=""
-          export_path="build/How-to-MUKBANG.apk"
+          export_path="build/How-to-MUKBANG-BETA-0.2.0.apk"
           encryption_include_filters=""
           encryption_exclude_filters=""
           encrypt_pck=false
@@ -89,7 +89,7 @@ jobs:
           package/show_in_android_tv=false
           package/show_in_app_library=true
           version/code=1
-          version/name="0.1.0"
+          version/name="0.2.0-beta.1"
           screen/immersive_mode=true
           screen/support_small=true
           screen/support_normal=true
@@ -112,7 +112,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: How-to-MUKBANG-Android
-          path: build/How-to-MUKBANG.apk
+          name: How-to-MUKBANG-BETA-0.2.0
+          path: build/How-to-MUKBANG-BETA-0.2.0.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
