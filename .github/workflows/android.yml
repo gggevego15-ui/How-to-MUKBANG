@@ -147,8 +147,8 @@ jobs:
           test -d "$ANDROID_HOME"
           test -d "$JAVA_HOME"
           test -f "$HOME/.android/debug.keystore"
-          # Load the editor settings through Godot itself before attempting export.
-          godot --headless --editor --path . --quit
+          # Avoid opening the Godot editor in headless CI: it can hang while loading editor layout.
+          # The Android SDK/JDK/keystore paths are verified above; the project is validated in the next step.
 
       - name: Validate project and import assets
         timeout-minutes: 22
