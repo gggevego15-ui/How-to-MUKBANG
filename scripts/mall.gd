@@ -591,7 +591,7 @@ func _build_main_menu() -> void:
 	footer.add_theme_color_override("font_color", Color("8294aa"))
 	menu_buttons.add_child(footer)
 
-	_build_settings_panel(menu_card)
+	_build_settings_panel(menu_buttons)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _make_menu_button(caption: String, primary: bool) -> Button:
