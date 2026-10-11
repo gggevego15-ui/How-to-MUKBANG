@@ -29,5 +29,15 @@ Imported GLB props remain at:
 
 The 16 `.import` sidecars under `assets/textures/pbr/` enable mipmap generation and VRAM compression (`compress/mode=2`). Normal maps use the normal-map compression flag. Project rendering settings enable Android ETC2/ASTC texture import and moderate 4× anisotropic filtering. `scripts/validate_pbr.gd` checks that all 16 textures load at 2048×2048 and that their import settings keep mipmaps and compression enabled.
 
+## First-person controls
+
+- **WASD** — walk around the food court
+- **Mouse** — look around horizontally and vertically
+- **Shift** — sprint
+- **Space** — jump
+- **Esc** — release the mouse; click the game window to capture it again
+
+The first-person camera includes visible legs and shoes when looking down. A lightweight directional screen-space blur briefly appears during fast mouse turns and fades smoothly. The controller is in `scripts/player_controller.gd`.
+
 ## Android build
 Open **Actions → Build How to MUKBANG Android**, wait for the workflow to finish, then download the **How-to-MUKBANG-Android** artifact. The workflow imports assets with Godot before exporting the APK.
