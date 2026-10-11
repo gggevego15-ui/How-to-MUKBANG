@@ -74,12 +74,14 @@ func _apply_pbr(key: String, family: String) -> void:
 	if material == null:
 		return
 	var root := "res://assets/textures/pbr/%s_" % family
-	# Keep the 4K source maps for authoring, but sample compact 512px maps in-game.
-	# This preserves fine surface detail without loading 4K maps into mobile GPU memory.
-	material.albedo_texture = load(root + "basecolor_512.png") as Texture2D
-	material.roughness_texture = load(root + "roughness_512.png") as Texture2D
-	material.normal_texture = load(root + "normal_512.png") as Texture2D
-	material.metallic_texture = load(root + "metallic_512.png") as Texture2D
+	var mobile := OS.has_feature("mobile") or OS.get_name() == "Android" or OS.get_name() == "iOS"
+	# Desktop uses the detailed 4096px vector source maps; Android uses prebuilt 512px
+	# maps to reduce texture memory, upload time, heat and battery usage.
+	var suffix := "512.png" if mobile else "4k.svg"
+	material.albedo_texture = load(root + "basecolor_" + suffix) as Texture2D
+	material.roughness_texture = load(root + "roughness_" + suffix) as Texture2D
+	material.normal_texture = load(root + "normal_" + suffix) as Texture2D
+	material.metallic_texture = load(root + "metallic_" + suffix) as Texture2D
 	material.normal_enabled = true
 	material.roughness = 1.0
 	# Only metal surfaces should use a metallic workflow; food and wood must stay dielectric.
