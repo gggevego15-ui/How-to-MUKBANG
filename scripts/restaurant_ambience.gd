@@ -4,23 +4,30 @@ extends Node
 const SAMPLE_RATE := 22050
 const LOOP_SECONDS := 4.0
 
-var _players: Array[AudioStreamPlayer] = []
+var _players: Array[AudioStreamPlayer3D] = []
 var _rng := RandomNumberGenerator.new()
 var _master_enabled := true
 
 func _ready() -> void:
 	_rng.randomize()
-	_add_loop("VisitorsMurmur", "visitors", -24.0)
-	_add_loop("KitchenSizzle", "kitchen", -23.0)
-	_add_loop("DishesAndCutlery", "dishes", -26.0)
-	_add_loop("CashRegister", "register", -28.0)
+	# Positions match the mall's coordinate system: counters are along the north side.
+	_add_loop("VisitorsMurmur", "visitors", -24.0, Vector3(0.0, 1.8, -2.0), 42.0)
+	_add_loop("KitchenSizzle", "kitchen", -23.0, Vector3(-38.0, 1.8, -38.0), 32.0)
+	_add_loop("DishesAndCutlery", "dishes", -26.0, Vector3(-5.0, 1.5, -34.0), 27.0)
+	_add_loop("CashRegister", "register", -28.0, Vector3(39.0, 1.5, -36.0), 24.0)
 
-func _add_loop(label: String, kind: String, volume: float) -> void:
-	var player := AudioStreamPlayer.new()
+func _add_loop(label: String, kind: String, volume: float, source_position: Vector3, audible_range: float) -> void:
+	var player := AudioStreamPlayer3D.new()
 	player.name = label
 	player.stream = _make_loop(kind)
 	player.volume_db = volume
 	player.bus = "Master"
+	player.position = source_position
+	player.max_distance = audible_range
+	player.unit_size = 8.0
+	player.panning_strength = 1.0
+	player.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+	player.max_db = 3.0
 	add_child(player)
 	_players.append(player)
 	player.play()
@@ -33,6 +40,12 @@ func set_ambience_enabled(enabled: bool) -> void:
 func set_ambience_volume(volume_db: float) -> void:
 	for player in _players:
 		player.volume_db = volume_db
+
+func set_layer_volume(layer_name: String, volume_db: float) -> void:
+	for player in _players:
+		if player.name == layer_name:
+			player.volume_db = volume_db
+			return
 
 func _make_loop(kind: String) -> AudioStreamWAV:
 	var count := int(SAMPLE_RATE * LOOP_SECONDS)
