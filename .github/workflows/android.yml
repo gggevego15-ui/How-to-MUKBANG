@@ -142,16 +142,26 @@ jobs:
         run: timeout --signal=TERM --kill-after=15s 7m godot --headless --editor --path . --import --quit
 
       - name: Install project Android build template
-        timeout-minutes: 6
+        timeout-minutes: 4
         shell: bash
         run: |
-          # Do not let a stalled Godot template installer occupy the runner indefinitely.
+          set -euo pipefail
+          # Godot can stay alive after printing "Loading editor layout". Explicitly
+          # request editor shutdown and enforce a hard timeout as a second safeguard.
           if [ -f android/build/build.gradle ] || [ -f android/build/build.gradle.kts ]; then
             echo "Android Gradle build template is already present."
           else
-            timeout --signal=TERM --kill-after=15s 5m godot --headless --editor --path . --install-android-build-template
+            timeout --verbose --signal=TERM --kill-after=10s 3m \
+              godot --headless --editor --path . --install-android-build-template --quit
           fi
-          test -f android/build/build.gradle || test -f android/build/build.gradle.kts
+
+          if [ ! -f android/build/build.gradle ] && [ ! -f android/build/build.gradle.kts ]; then
+            echo "::error::Godot did not create android/build/build.gradle(.kts). The template install either stalled or failed."
+            echo "Contents of android/ (if present):"
+            find android -maxdepth 3 -type f -print 2>/dev/null | head -100 || true
+            exit 1
+          fi
+          echo "Android Gradle build template is ready."
 
       - name: Validate 4K PBR texture imports
         timeout-minutes: 5
