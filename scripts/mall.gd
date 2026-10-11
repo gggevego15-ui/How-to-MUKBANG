@@ -26,6 +26,7 @@ func _ready() -> void:
 	_build_decor()
 	_build_lighting()
 	_build_player_camera()
+	_build_main_menu()
 
 func _material(key: String, color: Color, roughness: float = 0.7, metallic: float = 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
@@ -465,3 +466,218 @@ func _build_player_camera() -> void:
 	camera.fov = 78.0
 	camera.current = true
 	rig.add_child(camera)
+
+
+# Main menu overlay: works on desktop and mobile without replacing the procedural mall scene.
+var _main_menu_layer: CanvasLayer
+var _main_menu_root: Control
+var _settings_panel: PanelContainer
+var _menu_player: CharacterBody3D
+
+func _build_main_menu() -> void:
+	_menu_player = get_node_or_null("Player") as CharacterBody3D
+	_main_menu_layer = CanvasLayer.new()
+	_main_menu_layer.name = "MainMenuLayer"
+	_main_menu_layer.layer = 200
+	add_child(_main_menu_layer)
+
+	_main_menu_root = Control.new()
+	_main_menu_root.name = "MainMenu"
+	_main_menu_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_main_menu_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	_main_menu_layer.add_child(_main_menu_root)
+
+	var backdrop := ColorRect.new()
+	backdrop.name = "Backdrop"
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0.015, 0.025, 0.045, 0.82)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	_main_menu_root.add_child(backdrop)
+
+	var layout := HBoxContainer.new()
+	layout.name = "MenuLayout"
+	layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	layout.add_theme_constant_override("separation", 24)
+	_main_menu_root.add_child(layout)
+
+	var left_margin := MarginContainer.new()
+	left_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left_margin.add_theme_constant_override("margin_left", 48)
+	left_margin.add_theme_constant_override("margin_top", 30)
+	left_margin.add_theme_constant_override("margin_bottom", 30)
+	layout.add_child(left_margin)
+
+	var intro := VBoxContainer.new()
+	intro.alignment = BoxContainer.ALIGNMENT_CENTER
+	intro.add_theme_constant_override("separation", 12)
+	left_margin.add_child(intro)
+
+	var eyebrow := Label.new()
+	eyebrow.text = "THE ULTIMATE FOOD COURT"
+	eyebrow.add_theme_font_size_override("font_size", 16)
+	eyebrow.add_theme_color_override("font_color", Color("65d9ff"))
+	intro.add_child(eyebrow)
+
+	var title := Label.new()
+	title.text = "HOW TO\nMUKBANG"
+	title.add_theme_font_size_override("font_size", 58)
+	title.add_theme_color_override("font_color", Color("f5f8ff"))
+	intro.add_child(title)
+
+	var subtitle := Label.new()
+	subtitle.text = "Explore. Grab a bite. Make it your mall."
+	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	subtitle.add_theme_font_size_override("font_size", 18)
+	subtitle.add_theme_color_override("font_color", Color("c1ccdc"))
+	intro.add_child(subtitle)
+
+	var accent := ColorRect.new()
+	accent.custom_minimum_size = Vector2(112, 4)
+	accent.color = Color("65d9ff")
+	intro.add_child(accent)
+
+	var menu_margin := MarginContainer.new()
+	menu_margin.custom_minimum_size = Vector2(310, 0)
+	menu_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	menu_margin.add_theme_constant_override("margin_right", 42)
+	menu_margin.add_theme_constant_override("margin_top", 42)
+	menu_margin.add_theme_constant_override("margin_bottom", 42)
+	layout.add_child(menu_margin)
+
+	var menu_card := PanelContainer.new()
+	menu_card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var card_style := StyleBoxFlat.new()
+	card_style.bg_color = Color(0.035, 0.055, 0.085, 0.94)
+	card_style.border_color = Color(0.30, 0.72, 0.92, 0.8)
+	card_style.set_border_width_all(1)
+	card_style.set_corner_radius_all(18)
+	card_style.content_margin_left = 24
+	card_style.content_margin_right = 24
+	card_style.content_margin_top = 28
+	card_style.content_margin_bottom = 28
+	menu_card.add_theme_stylebox_override("panel", card_style)
+	menu_margin.add_child(menu_card)
+
+	var menu_buttons := VBoxContainer.new()
+	menu_buttons.add_theme_constant_override("separation", 12)
+	menu_card.add_child(menu_buttons)
+
+	var menu_heading := Label.new()
+	menu_heading.text = "MAIN MENU"
+	menu_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	menu_heading.add_theme_font_size_override("font_size", 21)
+	menu_heading.add_theme_color_override("font_color", Color("f5f8ff"))
+	menu_buttons.add_child(menu_heading)
+
+	var start_button := _make_menu_button("PLAY", true)
+	menu_buttons.add_child(start_button)
+	start_button.pressed.connect(_start_game)
+
+	var settings_button := _make_menu_button("SETTINGS", false)
+	menu_buttons.add_child(settings_button)
+	settings_button.pressed.connect(_toggle_settings)
+
+	var quit_button := _make_menu_button("QUIT GAME", false)
+	menu_buttons.add_child(quit_button)
+	quit_button.pressed.connect(func() -> void:
+		get_tree().quit()
+	)
+
+	var footer := Label.new()
+	footer.text = "WASD / TOUCH CONTROLS"
+	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	footer.add_theme_font_size_override("font_size", 11)
+	footer.add_theme_color_override("font_color", Color("8294aa"))
+	menu_buttons.add_child(footer)
+
+	_build_settings_panel(menu_card)
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _make_menu_button(caption: String, primary: bool) -> Button:
+	var button := Button.new()
+	button.text = caption
+	button.custom_minimum_size = Vector2(230, 52)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.focus_mode = Control.FOCUS_NONE
+	button.add_theme_font_size_override("font_size", 16)
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color("48bfe8") if primary else Color(0.10, 0.15, 0.22, 0.96)
+	normal.border_color = Color("83e2ff") if primary else Color(0.32, 0.46, 0.58, 0.8)
+	normal.set_border_width_all(1)
+	normal.set_corner_radius_all(10)
+	normal.content_margin_top = 10
+	normal.content_margin_bottom = 10
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = Color("72d7f5") if primary else Color(0.16, 0.25, 0.35, 1.0)
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = Color("2499c6") if primary else Color(0.07, 0.11, 0.17, 1.0)
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_color_override("font_color", Color("f6fbff"))
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_pressed_color", Color.WHITE)
+	return button
+
+func _build_settings_panel(parent: Control) -> void:
+	_settings_panel = PanelContainer.new()
+	_settings_panel.name = "SettingsPanel"
+	_settings_panel.visible = false
+	_settings_panel.custom_minimum_size = Vector2(280, 0)
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.025, 0.045, 0.07, 0.98)
+	panel_style.border_color = Color("65d9ff")
+	panel_style.set_border_width_all(1)
+	panel_style.set_corner_radius_all(12)
+	panel_style.content_margin_left = 16
+	panel_style.content_margin_right = 16
+	panel_style.content_margin_top = 16
+	panel_style.content_margin_bottom = 16
+	_settings_panel.add_theme_stylebox_override("panel", panel_style)
+	parent.add_child(_settings_panel)
+
+	var settings_box := VBoxContainer.new()
+	settings_box.add_theme_constant_override("separation", 10)
+	_settings_panel.add_child(settings_box)
+
+	var heading := Label.new()
+	heading.text = "SETTINGS"
+	heading.add_theme_font_size_override("font_size", 18)
+	settings_box.add_child(heading)
+
+	var sensitivity_label := Label.new()
+	sensitivity_label.name = "SensitivityLabel"
+	sensitivity_label.text = "Mouse sensitivity"
+	settings_box.add_child(sensitivity_label)
+
+	var sensitivity := HSlider.new()
+	sensitivity.name = "SensitivitySlider"
+	sensitivity.min_value = 0.0008
+	sensitivity.max_value = 0.006
+	sensitivity.step = 0.0002
+	sensitivity.value = 0.0022
+	sensitivity.custom_minimum_size = Vector2(220, 28)
+	settings_box.add_child(sensitivity)
+	sensitivity.value_changed.connect(func(value: float) -> void:
+		if _menu_player != null:
+			_menu_player.set("mouse_sensitivity", value)
+		sensitivity_label.text = "Mouse sensitivity: %.4f" % value
+	)
+
+	var back_button := _make_menu_button("BACK", false)
+	settings_box.add_child(back_button)
+	back_button.pressed.connect(func() -> void:
+		_settings_panel.visible = false
+	)
+
+func _toggle_settings() -> void:
+	if _settings_panel != null:
+		_settings_panel.visible = not _settings_panel.visible
+
+func _start_game() -> void:
+	if _main_menu_layer != null:
+		_main_menu_layer.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if _menu_player != null:
+		_menu_player.set_physics_process(true)
