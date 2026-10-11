@@ -68,21 +68,21 @@ func _apply_profile() -> void:
 			viewport.scaling_3d_scale = 0.72
 			_set_glow(false)
 			_set_light_budget(4)
-			_set_rain(100)
+			_set_rain(80)
 			_set_visitor_processing(false)
 		1:
 			Engine.max_fps = 45 if mobile else 60
 			viewport.scaling_3d_scale = 0.85 if mobile else 1.0
 			_set_glow(true)
 			_set_light_budget(8)
-			_set_rain(220)
+			_set_rain(180)
 			_set_visitor_processing(true)
 		2:
 			Engine.max_fps = 60
 			viewport.scaling_3d_scale = 1.0
 			_set_glow(true)
 			_set_light_budget(_omni_lights.size())
-			_set_rain(500)
+			_set_rain(360)
 			_set_visitor_processing(true)
 	if _quality_button != null:
 		_quality_button.text = "ГРАФИКА: " + PROFILE_LABELS[profile_index]
@@ -92,12 +92,26 @@ func _set_glow(enabled: bool) -> void:
 		_world_environment.environment.glow_enabled = enabled
 
 func _set_light_budget(count: int) -> void:
-	for i in range(_omni_lights.size()):
-		var light := _omni_lights[i]
-		light.visible = i < count
+	# Balance street lamps and indoor lights instead of accidentally spending the whole budget on one area.
+	var street_lights: Array[OmniLight3D] = []
+	var interior_lights: Array[OmniLight3D] = []
+	for light in _omni_lights:
+		if light.name.begins_with("StreetLampGlow_"):
+			street_lights.append(light)
+		else:
+			interior_lights.append(light)
+	for light in _omni_lights:
+		light.visible = false
 		light.shadow_enabled = false
+	var street_budget := mini(street_lights.size(), int(ceil(float(count) * 0.45)))
+	var interior_budget := mini(interior_lights.size(), count - street_budget)
+	for i in range(street_budget):
+		street_lights[i].visible = true
+	for i in range(interior_budget):
+		interior_lights[i].visible = true
+	# Real-time shadows are reserved for High; avoid their GPU cost on mobile Balanced/Eco.
 	for light in _directional_lights:
-		light.shadow_enabled = profile_index == 2
+		light.shadow_enabled = profile_index == 2 and not (OS.has_feature("mobile") or OS.get_name() == "Android" or OS.get_name() == "iOS")
 
 func _set_rain(amount: int) -> void:
 	if _rain == null:
