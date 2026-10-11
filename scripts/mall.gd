@@ -68,7 +68,8 @@ func _apply_pbr(key: String, family: String) -> void:
 	if material == null:
 		return
 	var root := "res://assets/textures/pbr/%s_" % family
-	# Keep 4K source maps for quality checks; use compact raster maps at runtime on mobile.
+	# Keep the 4K source maps for authoring, but sample compact 512px maps in-game.
+	# This preserves fine surface detail without loading 4K maps into mobile GPU memory.
 	material.albedo_texture = load(root + "basecolor_512.png") as Texture2D
 	material.roughness_texture = load(root + "roughness_512.png") as Texture2D
 	material.normal_texture = load(root + "normal_512.png") as Texture2D
@@ -76,9 +77,21 @@ func _apply_pbr(key: String, family: String) -> void:
 	material.normal_enabled = true
 	material.roughness = 1.0
 	material.metallic = 1.0
-	material.normal_scale = 0.28 if family == "food" else 0.2
+	# Slightly stronger micro-surface detail; keep food subtle so it does not look plastic.
+	match family:
+		"food":
+			material.normal_scale = 0.34
+			material.uv1_scale = Vector3(0.28, 0.28, 0.28)
+		"wood":
+			material.normal_scale = 0.32
+			material.uv1_scale = Vector3(0.18, 0.18, 0.18)
+		"ceramic":
+			material.normal_scale = 0.16
+			material.uv1_scale = Vector3(0.24, 0.24, 0.24)
+		"metal":
+			material.normal_scale = 0.26
+			material.uv1_scale = Vector3(0.22, 0.22, 0.22)
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	material.uv1_scale = Vector3(0.22, 0.22, 0.22)
 
 func _make_materials() -> void:
 	_material("floor", Color("c7cbd0"), 0.26)
@@ -678,14 +691,14 @@ func _build_lighting() -> void:
 	env.background_color = Color("080f20")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color("7187b4")
-	env.ambient_light_energy = 0.32
+	env.ambient_light_energy = 0.36
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.05
+	env.tonemap_exposure = 1.04
 	env.ambient_light_energy = 0.32
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_BG
 	env.glow_enabled = true
-	env.glow_intensity = 0.38
-	env.glow_bloom = 0.12
+	env.glow_intensity = 0.42
+	env.glow_bloom = 0.14
 	env.ssao_enabled = false
 	env.ssao_radius = 2.2
 	env.ssao_intensity = 1.55
