@@ -196,7 +196,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          timeout --signal=TERM --kill-after=20s 11m godot --verbose --headless --editor --path . --export-debug "Android" build/How-to-MUKBANG-0.2.0-beta.2.apk 2>&1 | tee build/android-export.log
+          timeout --signal=TERM --kill-after=20s 11m godot --verbose --headless --path . --export-debug "Android" build/How-to-MUKBANG-0.2.0-beta.2.apk 2>&1 | tee build/android-export.log
           test -s build/How-to-MUKBANG-0.2.0-beta.2.apk
 
       - name: Upload APK artifact
