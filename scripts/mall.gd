@@ -197,10 +197,10 @@ func _make_food_display(vendor_index: int, x: float, z: float) -> void:
 				_cylinder(self, "DessertPlate_%d" % index, origin + Vector3(0, 0.08, 0), 0.32, 0.035, "ceramic", false)
 				_sphere(self, "Donut_%d" % index, origin + Vector3(0, 0.2, 0), Vector3(0.4, 0.14, 0.38), "sign_pink")
 				_cylinder(self, "DonutHole_%d" % index, origin + Vector3(0, 0.28, 0), 0.09, 0.025, "bun_top", false)
-		5:
+			5:
 				_box(self, "TacoShell_%d" % index, origin + Vector3(0, 0.16, 0), Vector3(0.48, 0.2, 0.25), "bun_top", false)
 				_sphere(self, "TacoFilling_%d" % index, origin + Vector3(0, 0.27, 0), Vector3(0.4, 0.12, 0.2), "lettuce")
-		6:
+			6:
 				_make_drink(origin, index)
 			7:
 				_make_drink(origin, index)
