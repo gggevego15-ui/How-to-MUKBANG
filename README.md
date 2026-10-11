@@ -8,6 +8,7 @@ A mobile 3D mukbang game prototype made with Godot 4.
 - Expanded 120 × 110 m shopping mall shell with central atrium, skylight and upper gallery
 - Walkable neon-lit street outside the entrance, with sidewalks, real walk-in shop entrances, collision-free doorways, glass storefronts, stocked shelves, counters, glowing signs, street lamps, trees and reflective puddles
 - Rainy night weather with dense exterior rain, cool night ambience and warm/cyan street lighting
+- **Faster mobile startup:** runtime PBR maps use compact 512×512 PNGs while 4K SVG sources remain in the project; procedural noise generation is smaller, rain is capped at 500 particles, and expensive SSAO/SSR and omni-light shadows are disabled.
 - Imported glTF Binary (GLB) assets for a layered burger combo, cafe chair and self-service order kiosk
 - GLB assets contain PBR base-colour, metallic/roughness and normal texture channels
 - Separate 128×128 PNG texture maps are available under `assets/textures/`
