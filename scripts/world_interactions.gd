@@ -77,8 +77,34 @@ func _interact() -> void:
 			tween.tween_property(door, "rotation:y", target_angle, 0.42)
 			_show_toast("Дверь открывается" if not is_open else "Дверь закрывается")
 		"sign":
-			_active_target.visible = not _active_target.visible
-			_show_toast("Неон включён" if _active_target.visible else "Неон выключен")
+			var sign := _active_target
+			var turn_on := not sign.visible
+			var sign_tween := create_tween()
+			if turn_on:
+				sign.visible = true
+				sign.scale = Vector3(0.18, 1.0, 1.0)
+				sign_tween.set_trans(Tween.TRANS_BACK)
+				sign_tween.set_ease(Tween.EASE_OUT)
+				sign_tween.tween_property(sign, "scale", Vector3.ONE, 0.28)
+			else:
+				sign_tween.set_trans(Tween.TRANS_CUBIC)
+				sign_tween.set_ease(Tween.EASE_IN)
+				sign_tween.tween_property(sign, "scale", Vector3(0.12, 0.8, 1.0), 0.22)
+				sign_tween.tween_callback(func() -> void:
+					if is_instance_valid(sign):
+						sign.visible = false
+						sign.scale = Vector3.ONE
+				)
+			_show_toast("Неон включён" if turn_on else "Неон выключен")
+		"bench":
+			var bench := _active_target
+			var original_scale := bench.scale
+			var bench_tween := create_tween()
+			bench_tween.set_trans(Tween.TRANS_BACK)
+			bench_tween.set_ease(Tween.EASE_OUT)
+			bench_tween.tween_property(bench, "scale", original_scale * Vector3(1.0, 1.22, 1.0), 0.16)
+			bench_tween.tween_property(bench, "scale", original_scale, 0.22)
+			_show_toast("Скамейка — можно передохнуть")
 	_active_target = null
 
 func _build_interaction_ui() -> void:
