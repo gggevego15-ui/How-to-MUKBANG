@@ -11,6 +11,7 @@ var mats: Dictionary = {}
 func _ready() -> void:
 	_make_materials()
 	_build_mall_shell()
+	_build_surface_detail()
 	_build_atrium()
 	_build_food_court()
 	_build_vendor_row()
@@ -24,6 +25,22 @@ func _material(key: String, color: Color, roughness: float = 0.7, metallic: floa
 	m.albedo_color = color
 	m.roughness = roughness
 	m.metallic = metallic
+	m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3(0.55, 0.55, 0.55)
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.frequency = 0.045
+	noise.fractal_octaves = 4
+	noise.fractal_lacunarity = 2.1
+	var image := Image.create(256, 256, false, Image.FORMAT_RGBA8)
+	for py in range(256):
+		for px in range(256):
+			var n := noise.get_noise_2d(float(px), float(py))
+			var v := clampf(0.92 + n * 0.075, 0.82, 1.0)
+			image.set_pixel(px, py, Color(v, v, v, 1.0))
+	m.albedo_texture = ImageTexture.create_from_image(image)
 	mats[key] = m
 	return m
 
@@ -103,6 +120,29 @@ func _build_mall_shell() -> void:
 	for x in [-46.0, -24.0, 24.0, 46.0]:
 		for z in [-38.0, 0.0, 38.0]:
 			_box(self, "StructuralPillar_%s_%s" % [str(x), str(z)], Vector3(x, 4.8, z), Vector3(1.0, 9.6, 1.0), "concrete")
+
+
+func _build_surface_detail() -> void:
+	# Fine porcelain tile seams, realistic architectural trim and ceiling rails.
+	for x in range(-48, 49, 4):
+		_box(self, "FloorGroutX_%d" % x, Vector3(float(x), 0.012, 0), Vector3(0.018, 0.012, MALL_DEPTH - 2.0), "concrete", false)
+	for z in range(-41, 42, 4):
+		_box(self, "FloorGroutZ_%d" % z, Vector3(0, 0.013, float(z)), Vector3(MALL_WIDTH - 2.0, 0.012, 0.018), "concrete", false)
+	for x in range(-40, 41, 8):
+		_box(self, "CeilingBeamX_%d" % x, Vector3(float(x), 9.65, 0), Vector3(0.22, 0.28, MALL_DEPTH - 4.0), "metal", false)
+	for z in range(-32, 33, 8):
+		_box(self, "CeilingBeamZ_%d" % z, Vector3(0, 9.65, float(z)), Vector3(MALL_WIDTH - 4.0, 0.28, 0.22), "metal", false)
+	# Brushed-metal trims break up large flat wall surfaces.
+	for y in [0.35, 3.2, 6.2, 9.1]:
+		_box(self, "NorthWallTrim_%s" % str(y), Vector3(0, y, -42.9), Vector3(MALL_WIDTH - 1.5, 0.09, 0.12), "metal", false)
+		_box(self, "WestWallTrim_%s" % str(y), Vector3(-49.55, y, 0), Vector3(0.12, 0.09, MALL_DEPTH - 1.5), "metal", false)
+		_box(self, "EastWallTrim_%s" % str(y), Vector3(49.55, y, 0), Vector3(0.12, 0.09, MALL_DEPTH - 1.5), "metal", false)
+	# Vertical mullions give the upper shopfront glazing believable scale.
+	for side in [-1.0, 1.0]:
+		for z in range(-27, 29, 4):
+			_box(self, "ShopfrontMullion_%s_%d" % [str(side), z], Vector3(side * 48.55, 6.6, float(z)), Vector3(0.16, 2.5, 0.12), "metal", false)
+		for z in [-28.0, -14.0, 14.0, 28.0]:
+			_box(self, "GalleryDownlight_%s_%s" % [str(side), str(z)], Vector3(side * 39.0, 5.0, z), Vector3(2.0, 0.06, 0.35), "white", false)
 
 func _build_atrium() -> void:
 	# Wide central promenade, patterned floor inlays, and decorative planters.
@@ -192,11 +232,22 @@ func _build_lighting() -> void:
 	env.ambient_light_color = Color("c9d8ed")
 	env.ambient_light_energy = 0.72
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.05
+	env.ambient_light_energy = 0.8
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_BG
+	env.glow_enabled = true
+	env.glow_intensity = 0.22
+	env.glow_bloom = 0.08
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.08
+	env.adjustment_saturation = 1.06
 	world.environment = env
 	add_child(world)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52, -28, 0)
-	sun.light_energy = 0.72
+	sun.light_energy = 0.9
+	sun.directional_shadow_max_distance = 90.0
+	sun.shadow_bias = 0.035
 	sun.shadow_enabled = true
 	add_child(sun)
 	for x in [-35.0, -15.0, 15.0, 35.0]:
@@ -204,7 +255,8 @@ func _build_lighting() -> void:
 			var light := OmniLight3D.new()
 			light.position = Vector3(x, 8.8, z)
 			light.light_color = Color("ffe0b5")
-			light.light_energy = 1.25
+			light.light_energy = 1.05
+			light.shadow_enabled = true
 			light.omni_range = 16.0
 			add_child(light)
 
