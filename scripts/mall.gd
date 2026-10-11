@@ -648,7 +648,7 @@ func _build_settings_panel(parent: Control) -> void:
 
 	var sensitivity_label := Label.new()
 	sensitivity_label.name = "SensitivityLabel"
-	sensitivity_label.text = "Mouse sensitivity"
+	sensitivity_label.text = "Camera sensitivity"
 	settings_box.add_child(sensitivity_label)
 
 	var sensitivity := HSlider.new()
@@ -662,7 +662,8 @@ func _build_settings_panel(parent: Control) -> void:
 	sensitivity.value_changed.connect(func(value: float) -> void:
 		if _menu_player != null:
 			_menu_player.set("mouse_sensitivity", value)
-		sensitivity_label.text = "Mouse sensitivity: %.4f" % value
+			_menu_player.set("touch_look_sensitivity", value * 1.55)
+		sensitivity_label.text = "Camera sensitivity: %.4f" % value
 	)
 
 	var back_button := _make_menu_button("BACK", false)
