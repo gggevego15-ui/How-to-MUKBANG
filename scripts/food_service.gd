@@ -68,6 +68,8 @@ func _process(_delta: float) -> void:
 	var ready := not _servings.is_empty()
 	_eat_button.visible = ready and not _is_eating
 	_hint.visible = ready
+	if ready:
+		_hint.text = "🍱 ЗАКАЗ ГОТОВ — F / ЕСТЬ  •  %d порций" % _servings.size()
 
 func _input(event: InputEvent) -> void:
 	if not _servings.is_empty() and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F:
@@ -227,83 +229,139 @@ func _build_hand_rig() -> void:
 		_hand_rig.add_child(mesh)
 	_hand_rig.visible = false
 
+func _build_hand_rig() -> void:
+	# Lightweight first-person hand model attached to the camera.
+	_hand_rig = Node3D.new()
+	_hand_rig.name = "EatingHandRig"
+	_hand_rig.position = _hand_home_position
+	_hand_rig.rotation = _hand_home_rotation
+	_hand_rig.visible = false
+	_camera.add_child(_hand_rig)
+	var skin := _mat(Color("c98f70"), 0.68)
+	var sleeve := _mat(Color("e8edf1"), 0.82)
+	var arm := MeshInstance3D.new()
+	arm.name = "Forearm"
+	var arm_mesh := CylinderMesh.new()
+	arm_mesh.top_radius = 0.075
+	arm_mesh.bottom_radius = 0.105
+	arm_mesh.height = 0.38
+	arm.mesh = arm_mesh
+	arm.position = Vector3(0.0, -0.13, 0.02)
+	arm.rotation.z = -0.22
+	arm.material_override = sleeve
+	_hand_rig.add_child(arm)
+	var palm := MeshInstance3D.new()
+	palm.name = "Palm"
+	palm.mesh = SphereMesh.new()
+	palm.position = Vector3(0.0, 0.09, -0.06)
+	palm.scale = Vector3(0.105, 0.115, 0.07)
+	palm.material_override = skin
+	_hand_rig.add_child(palm)
+	for finger in range(4):
+		var digit := MeshInstance3D.new()
+		digit.name = "Finger_%d" % finger
+		var digit_mesh := CapsuleMesh.new()
+		digit_mesh.radius = 0.018
+		digit_mesh.height = 0.105
+		digit.mesh = digit_mesh
+		digit.position = Vector3(-0.063 + float(finger) * 0.042, 0.17, -0.09)
+		digit.rotation.x = -0.38
+		digit.material_override = skin
+		_hand_rig.add_child(digit)
+	var thumb := MeshInstance3D.new()
+	thumb.name = "Thumb"
+	var thumb_mesh := CapsuleMesh.new()
+	thumb_mesh.radius = 0.022
+	thumb_mesh.height = 0.11
+	thumb.mesh = thumb_mesh
+	thumb.position = Vector3(0.105, 0.08, -0.08)
+	thumb.rotation.z = -0.8
+	thumb.rotation.x = -0.35
+	thumb.material_override = skin
+	_hand_rig.add_child(thumb)
+
 func _eat_one() -> void:
 	if _is_eating or _servings.is_empty():
 		return
 	_is_eating = true
-	var food: Node3D = _servings.pop_front() as Node3D
-	_play_bite_sound(food)
-	if _camera == null or not is_instance_valid(_camera):
-		_eat_fallback(food)
-		return
-	food.reparent(_camera, true)
-	food.set_meta("eating_original_scale", Vector3.ONE * 0.62)
-	food.position = Vector3(0.28, -0.4, -0.82)
-	food.rotation = Vector3(-0.2, 0.0, 0.0)
-	food.scale = Vector3.ONE * 0.62
-	_hand_rig.position = Vector3(0.46, -0.55, -0.68)
-	_hand_rig.rotation = Vector3.ZERO
-	_hand_rig.visible = true
-	var lift := create_tween()
-	lift.set_parallel(true)
-	lift.tween_property(food, "position", Vector3(0.12, -0.19, -0.54), 0.42).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	lift.tween_property(food, "rotation", Vector3(-0.18, 0.35, 0.08), 0.42).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	lift.tween_property(_hand_rig, "position", Vector3(0.15, -0.24, -0.48), 0.38).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	lift.tween_property(_hand_rig, "rotation", Vector3(-0.12, -0.22, -0.3), 0.38)
-	lift.chain().tween_callback(func() -> void:
-		if is_instance_valid(food):
-			_animate_bites(food)
-	)
-
-func _animate_bites(food: Node3D) -> void:
-	var original_scale: Vector3 = food.get_meta("eating_original_scale", Vector3.ONE)
-	var bite_tween := create_tween()
-	for bite in range(3):
-		bite_tween.tween_property(food, "position:y", -0.145, 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		bite_tween.parallel().tween_property(_camera, "rotation:x", _camera.rotation.x + deg_to_rad(1.4), 0.09)
-		bite_tween.tween_property(food, "position:y", -0.19, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		bite_tween.parallel().tween_property(food, "scale", original_scale * (1.0 - 0.17 * float(bite + 1)), 0.12)
-		bite_tween.tween_interval(0.16)
-	bite_tween.tween_callback(func() -> void:
-		if is_instance_valid(food):
-			food.queue_free()
-		_hand_rig.visible = false
-		_hand_rig.position = Vector3(0.46, -0.55, -0.68)
-		_fullness = mini(_fullness + 12, 100)
-		_feedback.text = "НЯМ!  +12 сытости  •  %d%%" % _fullness
-		_feedback.visible = true
-		_feedback.modulate.a = 1.0
-		_feedback.position.y = 100.0
-		var pop := create_tween()
-		pop.set_parallel(true)
-		pop.tween_property(_feedback, "position:y", 62.0, 0.8).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		pop.tween_property(_feedback, "modulate:a", 0.0, 1.0).set_delay(0.25)
-		pop.chain().tween_callback(func() -> void:
-			_feedback.visible = false
-			_feedback.position.y = 100.0
-		)
+	var food := _servings[0]
+	if not is_instance_valid(food):
+		_servings.pop_front()
 		_is_eating = false
-		if _servings.is_empty() and _tray != null and is_instance_valid(_tray):
-			var cleanup := create_tween()
-			cleanup.tween_property(_tray, "scale", Vector3.ONE * 0.01, 0.25)
-			cleanup.tween_callback(_tray.queue_free)
-	)
-
-func _eat_fallback(food: Node3D) -> void:
+		return
+	var original_position := food.global_position
+	var original_rotation := food.rotation
+	var original_scale := food.scale
+	var bites_left := int(food.get_meta("bites_left", BITES_PER_SERVING))
+	food.set_meta("bites_left", bites_left)
+	if _hand_rig != null:
+		_hand_rig.visible = true
+		_hand_rig.position = _hand_home_position + Vector3(0.0, -0.10, 0.08)
+		_hand_rig.rotation = _hand_home_rotation + Vector3(-0.15, 0.0, -0.18)
+		var hand_raise := create_tween()
+		hand_raise.set_trans(Tween.TRANS_CUBIC)
+		hand_raise.set_ease(Tween.EASE_OUT)
+		hand_raise.tween_property(_hand_rig, "position", _hand_home_position, 0.20)
+		hand_raise.tween_property(_hand_rig, "rotation", _hand_home_rotation, 0.20)
+	_play_bite_sound(food)
 	var tween := create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(food, "position", food.position + Vector3(0, 0.62, 0.22), 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(food, "rotation", Vector3(-0.45, 0.7, 0.28), 0.42)
-	tween.tween_property(food, "scale", Vector3.ONE * 0.02, 0.42).set_delay(0.16)
-	tween.chain().tween_callback(func() -> void:
-		if is_instance_valid(food):
-			food.queue_free()
-		_fullness = mini(_fullness + 12, 100)
-		_feedback.text = "НЯМ!  +12 сытости  •  %d%%" % _fullness
+	var mouth_position := _camera.global_position + (-_camera.global_transform.basis.z * 0.62) + Vector3.UP * -0.20 if _camera != null else original_position + Vector3.UP * 0.5
+	tween.tween_property(food, "global_position", mouth_position, 0.24).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(food, "rotation", Vector3(-0.35, food.rotation.y + 0.55, 0.22), 0.24).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(food, "scale", original_scale * 0.88, 0.24).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.chain().tween_interval(0.12)
+	tween.tween_callback(func() -> void:
+		if not is_instance_valid(food):
+			_is_eating = false
+			return
+		bites_left -= 1
+		food.set_meta("bites_left", bites_left)
+		_fullness = mini(_fullness + int(ceil(12.0 / float(BITES_PER_SERVING))), 100)
+		_feedback.text = "НЯМ!  Укус %d/%d  •  %d%%" % [BITES_PER_SERVING - bites_left, BITES_PER_SERVING, _fullness]
 		_feedback.visible = true
-		_is_eating = false
-		if _servings.is_empty() and _tray != null and is_instance_valid(_tray):
-			_tray.queue_free()
+		_feedback.modulate.a = 1.0
+		var pop := create_tween()
+		pop.set_parallel(true)
+		pop.tween_property(_feedback, "position:y", 62.0, 0.55).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		pop.tween_property(_feedback, "modulate:a", 0.0, 0.75).set_delay(0.15)
+		pop.chain().tween_callback(func() -> void:
+			if is_instance_valid(_feedback):
+				_feedback.visible = false
+				_feedback.position.y = 100.0
+		)
+		if bites_left > 0:
+			var return_tween := create_tween()
+			return_tween.set_parallel(true)
+			return_tween.tween_property(food, "global_position", original_position, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+			return_tween.tween_property(food, "rotation", original_rotation, 0.22)
+			return_tween.tween_property(food, "scale", original_scale * (0.72 + 0.09 * float(bites_left)), 0.22)
+			return_tween.chain().tween_callback(func() -> void:
+				_is_eating = false
+				if _hand_rig != null and is_instance_valid(_hand_rig):
+					_hand_rig.visible = false
+					_hand_rig.position = _hand_home_position
+					_hand_rig.rotation = _hand_home_rotation
+			)
+		else:
+			_servings.pop_front()
+			var remove_tween := create_tween()
+			remove_tween.set_parallel(true)
+			remove_tween.tween_property(food, "scale", Vector3.ONE * 0.015, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+			remove_tween.tween_property(food, "position:y", food.position.y + 0.08, 0.16)
+			remove_tween.chain().tween_callback(func() -> void:
+				if is_instance_valid(food):
+					food.queue_free()
+				if _hand_rig != null and is_instance_valid(_hand_rig):
+					_hand_rig.visible = false
+					_hand_rig.position = _hand_home_position
+					_hand_rig.rotation = _hand_home_rotation
+				_is_eating = false
+				if _servings.is_empty() and _tray != null and is_instance_valid(_tray):
+					var cleanup := create_tween()
+					cleanup.tween_property(_tray, "scale", Vector3.ONE * 0.01, 0.25)
+					cleanup.tween_callback(_tray.queue_free)
+		)
 	)
 
 ## Plays a short, food-specific procedural sound without external audio files.
