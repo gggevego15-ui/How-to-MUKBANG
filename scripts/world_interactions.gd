@@ -24,6 +24,13 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if _player == null or _camera == null:
 		return
+	if _player.has_method("is_seated") and _player.is_seated():
+		_prompt.text = "E  ·  Встать"
+		_prompt.visible = true
+		if _touch_button != null:
+			_touch_button.text = "ВСТАТЬ"
+			_touch_button.visible = true
+		return
 	_active_target = _find_target()
 	if _active_target == null:
 		_prompt.visible = false
@@ -66,7 +73,23 @@ func _find_target() -> Node3D:
 func _interact() -> void:
 	if _active_target == null or not is_instance_valid(_active_target):
 		return
+	if _player.has_method("is_seated") and _player.is_seated():
+		_player.set_seated(false)
+		_show_toast("Вы встали из-за стола")
+		_active_target = null
+		return
 	match str(_active_target.get_meta("interaction_type", "")):
+		"seat":
+			var chair := _active_target
+			var table_position: Vector3 = chair.get_meta("seat_table_position", chair.global_position + Vector3(0, 1.05, 0))
+			var away_from_table := (chair.global_position - Vector3(table_position.x, chair.global_position.y, table_position.z)).normalized()
+			if away_from_table.length_squared() < 0.01:
+				away_from_table = -chair.global_transform.basis.z
+			var sit_position := chair.global_position + away_from_table * 0.18
+			var face_direction := Vector3(table_position.x, chair.global_position.y, table_position.z) - sit_position
+			var facing_y := atan2(-face_direction.x, -face_direction.z)
+			_player.set_seated(true, sit_position, facing_y, chair.get_meta("seat_table_origin", table_position))
+			_show_toast("Вы сели за стол. Нажмите E, чтобы встать")
 		"door":
 			var door := _active_target
 			var is_open := absf(door.rotation.y) > 0.6
