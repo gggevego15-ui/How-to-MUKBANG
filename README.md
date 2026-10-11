@@ -21,6 +21,9 @@ A mobile 3D mukbang game prototype made with Godot 4.
 - Atrium benches are interactive: approach and face a seat to see a contextual prompt, then press **E** or tap the action button for a spring/bounce animation and a rest message
 - Street neon signs animate when switched on/off with a quick scale-in/scale-out transition; world interactions use the same proximity prompt on desktop and Android
 - Street neon signs can be switched on/off from nearby; contextual prompts and feedback messages work on desktop and touch screens
+- Interactive drink vending machines in street shops dispense a visible can with a springy pop-out animation
+- Street bins open and close with a hinged lid animation; existing atrium benches react with a quick bounce
+- Interaction feedback animates smoothly alongside the existing door and neon transitions
 - Procedural furniture, floor tile seams, architectural trim and real-time lighting
 
 ## PBR texture library (4K source maps, Android-conscious)
