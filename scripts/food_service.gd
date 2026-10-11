@@ -85,6 +85,8 @@ func _input(event: InputEvent) -> void:
 
 func serve(ordered_items: Array, products: Array, player: CharacterBody3D) -> void:
 	_player = player
+	if _waiter != null and is_instance_valid(_waiter):
+		_waiter.queue_free()
 	if _tray != null and is_instance_valid(_tray):
 		_tray.queue_free()
 	_servings.clear()
