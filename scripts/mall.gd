@@ -392,7 +392,10 @@ func _build_decor() -> void:
 	# Bench seating beside the atrium.
 	for z in [-12.0, 12.0]:
 		for x in [-12.0, 12.0]:
-			_box(self, "AtriumBenchSeat", Vector3(x, 0.55, z), Vector3(3.4, 0.35, 0.8), "wood_light")
+			var bench_seat := _box(self, "AtriumBenchSeat_%s_%s" % [str(x), str(z)], Vector3(x, 0.55, z), Vector3(3.4, 0.35, 0.8), "wood_light")
+			bench_seat.add_to_group("world_interactable")
+			bench_seat.set_meta("interaction_type", "bench")
+			bench_seat.set_meta("interaction_label", "Проверить скамейку")
 			_box(self, "AtriumBenchBase", Vector3(x, 0.25, z), Vector3(2.8, 0.35, 0.55), "metal")
 	# Entry doors and glass panels.
 	for x in [-12.0, -6.0, 6.0, 12.0]:
