@@ -12,6 +12,7 @@ var _fps_elapsed := 0.0
 var _fps_frames := 0
 var _world_environment: WorldEnvironment
 var _rain: CPUParticles3D
+var _puddle_effects: Node
 var _omni_lights: Array[OmniLight3D] = []
 var _directional_lights: Array[DirectionalLight3D] = []
 var _visitors: Array[Node] = []
@@ -37,6 +38,8 @@ func _collect_nodes(root: Node) -> void:
 			_world_environment = child as WorldEnvironment
 		elif child is CPUParticles3D and child.name == "NightRain":
 			_rain = child as CPUParticles3D
+		elif child.name == "RainPuddleEffects":
+			_puddle_effects = child
 		elif child is OmniLight3D:
 			_omni_lights.append(child as OmniLight3D)
 		elif child is DirectionalLight3D:
@@ -69,6 +72,7 @@ func _apply_profile() -> void:
 			_set_glow(false)
 			_set_light_budget(4)
 			_set_rain(80)
+			_set_puddle_quality(false, 0)
 			_set_visitor_processing(false)
 		1:
 			Engine.max_fps = 45 if mobile else 60
@@ -76,6 +80,7 @@ func _apply_profile() -> void:
 			_set_glow(true)
 			_set_light_budget(8)
 			_set_rain(180)
+			_set_puddle_quality(true, 5)
 			_set_visitor_processing(true)
 		2:
 			Engine.max_fps = 60
@@ -83,6 +88,7 @@ func _apply_profile() -> void:
 			_set_glow(true)
 			_set_light_budget(_omni_lights.size())
 			_set_rain(360)
+			_set_puddle_quality(true, 10)
 			_set_visitor_processing(true)
 	if _quality_button != null:
 		_quality_button.text = "ГРАФИКА: " + PROFILE_LABELS[profile_index]
@@ -118,6 +124,10 @@ func _set_rain(amount: int) -> void:
 		return
 	_rain.amount = amount
 	_rain.emitting = amount > 0
+
+func _set_puddle_quality(enabled: bool, effect_count: int) -> void:
+	if _puddle_effects != null and _puddle_effects.has_method("set_quality"):
+		_puddle_effects.call("set_quality", enabled, effect_count)
 
 func _set_visitor_processing(enabled: bool) -> void:
 	for visitor in _visitors:
