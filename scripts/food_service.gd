@@ -431,6 +431,8 @@ func _eat_one() -> void:
 			return
 		bites_left -= 1
 		food.set_meta("bites_left", bites_left)
+		_animate_chewing()
+		_spawn_bite_effects(food)
 		_fullness = mini(_fullness + int(ceil(12.0 / float(BITES_PER_SERVING))), 100)
 		_feedback.text = "НЯМ!  Укус %d/%d  •  %d%%" % [BITES_PER_SERVING - bites_left, BITES_PER_SERVING, _fullness]
 		_feedback.visible = true
@@ -449,7 +451,8 @@ func _eat_one() -> void:
 			return_tween.set_parallel(true)
 			return_tween.tween_property(food, "global_position", original_position, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 			return_tween.tween_property(food, "rotation", original_rotation, 0.22)
-			return_tween.tween_property(food, "scale", original_scale * (0.72 + 0.09 * float(bites_left)), 0.22)
+			var remaining_ratio := float(bites_left) / float(BITES_PER_SERVING)
+			return_tween.tween_property(food, "scale", original_scale * (0.55 + 0.45 * remaining_ratio), 0.22)
 			return_tween.chain().tween_callback(func() -> void:
 				_is_eating = false
 				if _hand_rig != null and is_instance_valid(_hand_rig):
@@ -477,6 +480,50 @@ func _eat_one() -> void:
 					cleanup.tween_callback(_tray.queue_free)
 		)
 	)
+
+func _animate_chewing() -> void:
+	if _camera == null or not is_instance_valid(_camera):
+		return
+	var home_position := _camera.position
+	var home_rotation := _camera.rotation
+	var chew := create_tween()
+	chew.set_trans(Tween.TRANS_SINE)
+	chew.set_ease(Tween.EASE_IN_OUT)
+	for cycle in range(3):
+		chew.tween_property(_camera, "rotation:x", home_rotation.x + deg_to_rad(1.1), 0.09)
+		chew.parallel().tween_property(_camera, "position:y", home_position.y - 0.012, 0.09)
+		chew.tween_property(_camera, "rotation:x", home_rotation.x - deg_to_rad(0.7), 0.10)
+		chew.parallel().tween_property(_camera, "position:y", home_position.y + 0.006, 0.10)
+	chew.tween_property(_camera, "rotation", home_rotation, 0.12)
+	chew.parallel().tween_property(_camera, "position", home_position, 0.12)
+
+func _spawn_bite_effects(food: Node3D) -> void:
+	if not is_instance_valid(food):
+		return
+	var category := str(food.get_meta("food_category", "ФАСТФУД"))
+	var product := str(food.get_meta("food_product", "Еда"))
+	if category == "НАПИТКИ" or product == "Лапша вок":
+		return
+	var crumbs := Node3D.new()
+	crumbs.name = "BiteCrumbs"
+	get_parent().get_parent().add_child(crumbs)
+	var origin := food.global_position
+	var crumb_color := Color("d9a45c") if category == "КУРОЧКА" or product == "Картошка фри" else Color("b77b48")
+	for i in range(4):
+		var crumb := MeshInstance3D.new()
+		crumb.mesh = SphereMesh.new()
+		crumb.scale = Vector3.ONE * (0.018 + float(i % 2) * 0.008)
+		crumb.position = origin
+		crumb.material_override = _mat(crumb_color, 0.92)
+		crumbs.add_child(crumb)
+		var direction := Vector3(randf_range(-0.22, 0.22), randf_range(0.08, 0.25), randf_range(-0.16, 0.16))
+		var crumb_tween := create_tween()
+		crumb_tween.set_parallel(true)
+		crumb_tween.tween_property(crumb, "position", direction + Vector3(0, 0.12, 0), 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		crumb_tween.tween_property(crumb, "scale", Vector3.ZERO, 0.32).set_delay(0.12)
+	var cleanup := create_tween()
+	cleanup.tween_interval(0.5)
+	cleanup.tween_callback(crumbs.queue_free)
 
 ## Plays a short, food-specific procedural sound without external audio files.
 ## Layered filtered noise, crunchy transients and soft low-frequency impacts keep the
