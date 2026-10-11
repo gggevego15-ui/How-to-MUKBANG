@@ -1,6 +1,6 @@
 # How to MUKBANG
 
-**Current beta target: `0.2.0-beta.1`** — visual polish, first-person camera animation, and Android test build.
+**First public prerelease target: `0.2.0-beta.2`** — Android APK, food-specific eating sounds, walk-in street shops, and the expanded rainy-night mall.
 
 A mobile 3D mukbang game prototype made with Godot 4.
 
@@ -16,6 +16,7 @@ A mobile 3D mukbang game prototype made with Godot 4.
 - Working shopping flow with a cart, item quantities, prices, a 5,000 ₽ starting balance, checkout and order-ready notification; press **E** near a kiosk (or tap **ЗАКАЗАТЬ** on mobile)
 - Ordered food appears on the nearest dining table after a short preparation delay, with pop-in serving animations and distinct procedural 3D food for chicken, sushi rolls, burgers, fries, pizza, drinks and desserts
 - Eating animation: press **F** or tap **ЕСТЬ**; each portion lifts, tilts and disappears, with a floating feedback label and a simple fullness percentage
+- Food-specific procedural bite audio: crisp crackling crunches for fried chicken and fries, layered crunch and low bite impacts for burgers and pizza, softer moist sounds for sushi and desserts, slurping for noodles and drinks, plus fizzy hiss for cola and lemonade. Audio is synthesized locally by Godot at runtime, so no external sound files or network access are needed.
 - Interactive street-shop doors swing open and closed with a smooth hinge animation; aim at a nearby door and press **E** or tap the Android interaction button
 - Street neon signs can be switched on/off from nearby; contextual prompts and feedback messages work on desktop and touch screens
 - Procedural furniture, floor tile seams, architectural trim and real-time lighting
@@ -55,4 +56,4 @@ On Android/iOS, a virtual joystick appears in the lower-left corner: drag it to 
 The first-person camera includes visible legs and shoes when looking down. A lightweight directional screen-space blur briefly appears during fast mouse turns and fades smoothly. The controller is in `scripts/player_controller.gd`.
 
 ## Android build
-Open **Actions → Build How to MUKBANG Android**, wait for the workflow to finish, then download the **How-to-MUKBANG-Android** artifact. The workflow imports assets with Godot before exporting the APK.
+The **Build How to MUKBANG Android** workflow imports assets, validates the 4K PBR maps, exports the Android APK, and uploads a downloadable Actions artifact. On the first successful push to `main`, it also creates the GitHub prerelease `v0.2.0-beta.2` with the APK attached. Subsequent pushes do not overwrite the published release. The build is a beta and should be tested on a real Android device before treating it as stable.
