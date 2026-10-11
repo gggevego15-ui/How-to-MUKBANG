@@ -103,7 +103,7 @@ func _apply_profile() -> void:
 			# 4K supersampling is desktop-only. Android remains at native scale to avoid
 			# excessive heat, memory use and battery drain.
 			Engine.max_fps = 60
-			viewport.scaling_3d_scale = 1.0 if mobile else 1.5
+			viewport.scaling_3d_scale = 1.0 if mobile else 2.0
 			_set_glow(true)
 			_set_light_budget(mini(_omni_lights.size(), 12 if mobile else _omni_lights.size()))
 			_set_rain(240 if mobile else 500)
