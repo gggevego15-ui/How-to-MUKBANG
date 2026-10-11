@@ -1,0 +1,109 @@
+name: Build How to MUKBANG Android
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform packages
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install Godot and export templates
+        shell: bash
+        run: |
+          GODOT_VERSION="4.4.1"
+          curl -L --fail -o godot.zip "https://github.com/godotengine/godot/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo mv "Godot_v$GODOT_VERSION-stable_linux.x86_64" /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+          curl -L --fail -o templates.tpz "https://github.com/godotengine/godot/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/$GODOT_VERSION.stable"
+          unzip -q templates.tpz -d templates
+          cp -R templates/templates/. "$HOME/.local/share/godot/export_templates/$GODOT_VERSION.stable/"
+
+      - name: Configure Godot Android export
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.config/godot" "$HOME/.android"
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          EOF
+          keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+      - name: Create Android export preset
+        shell: bash
+        run: |
+          cat > export_presets.cfg <<'EOF'
+          [preset.0]
+          name="Android"
+          platform="Android"
+          runnable=true
+          dedicated_server=false
+          custom_features=""
+          export_filter="all_resources"
+          include_filter=""
+          exclude_filter=""
+          export_path="build/How-to-MUKBANG.apk"
+          encryption_include_filters=""
+          encryption_exclude_filters=""
+          encrypt_pck=false
+          encrypt_directory=false
+          [preset.0.options]
+          custom_template/debug=""
+          custom_template/release=""
+          gradle_build/use_gradle_build=false
+          package/unique_name="org.sinrok.howtomukbang"
+          package/name="How to MUKBANG"
+          package/signed=true
+          package/app_category=0
+          package/retain_data_on_uninstall=false
+          package/exclude_from_recents=false
+          package/show_in_android_tv=false
+          package/show_in_app_library=true
+          version/code=1
+          version/name="0.1.0"
+          screen/immersive_mode=true
+          screen/support_small=true
+          screen/support_normal=true
+          screen/support_large=true
+          screen/support_xlarge=true
+          user_data/backup=false
+          permissions/internet=false
+          EOF
+          mkdir -p build
+
+      - name: Validate project and import assets
+        run: godot --headless --editor --path . --quit
+
+      - name: Export Android APK
+        run: godot --headless --path . --export-debug "Android" build/How-to-MUKBANG.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: How-to-MUKBANG-Android
+          path: build/How-to-MUKBANG.apk
+          if-no-files-found: error
+          retention-days: 14
