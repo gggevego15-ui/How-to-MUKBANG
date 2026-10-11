@@ -100,8 +100,8 @@ func _apply_pbr(key: String, family: String) -> void:
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 
 func _make_materials() -> void:
-	_material("floor", Color("c7cbd0"), 0.26)
-	_material("tile_dark", Color("68717d"), 0.32)
+	_material("floor", Color("c7cbd0"), 0.19, 0.06)
+	_material("tile_dark", Color("68717d"), 0.25, 0.04)
 	_material("wall", Color("e8e5df"), 0.82)
 	_material("concrete", Color("a7adb5"), 0.86)
 	_material("wood", Color("87563b"), 0.38)
@@ -115,9 +115,9 @@ func _make_materials() -> void:
 	_material("sign_pink", Color("ff5ca8"), 0.28, 0.1)
 	_material("sign_blue", Color("55b9ff"), 0.28, 0.1)
 	_material("black", Color("202631"), 0.32)
-	_material("asphalt", Color("151c27"), 0.16, 0.22)
+	_material("asphalt", Color("111a27"), 0.12, 0.08)
 	_material("road_line", Color("d9e6ee"), 0.32)
-	_material("puddle", Color(0.10, 0.20, 0.29, 0.82), 0.06, 0.35)
+	_material("puddle", Color("15283b"), 0.055, 0.02)
 	_material("brick", Color("343b49"), 0.82)
 	_material("neon_cyan", Color("38d9ff"), 0.2, 0.1)
 	_material("neon_pink", Color("ff4fa3"), 0.2, 0.1)
@@ -486,12 +486,20 @@ func _build_street() -> void:
 			lid_pivot.position = Vector3(0.0, 1.05, -0.38)
 			bin.add_child(lid_pivot)
 			_box(lid_pivot, "BinLid", Vector3(0.0, 0.0, 0.38), Vector3(0.92, 0.12, 0.92), "chrome", false)
-	# Thin glossy puddles create broken neon reflections across the asphalt.
+	# Glossy puddles plus inexpensive colored strips fake broken neon reflections on mobile GPUs.
 	for i in range(34):
 		var px := sin(float(i) * 12.73) * 18.0
 		var pz := 62.0 + float(i) * 4.25
-		var puddle := _box(self, "RoadPuddle_%02d" % i, Vector3(px, 0.008, pz), Vector3(1.2 + float(i % 4) * 0.8, 0.018, 0.55 + float(i % 3) * 0.3), "puddle", false)
+		var puddle_width := 1.2 + float(i % 4) * 0.8
+		var puddle_depth := 0.55 + float(i % 3) * 0.3
+		var puddle := _box(self, "RoadPuddle_%02d" % i, Vector3(px, 0.008, pz), Vector3(puddle_width, 0.018, puddle_depth), "puddle", false)
 		puddle.rotation.y = float(i) * 0.71
+		if i % 2 == 0:
+			var reflection := _box(self, "NeonReflection_Cyan_%02d" % i, Vector3(px + 0.12, 0.019, pz + 0.04), Vector3(puddle_width * 0.72, 0.004, 0.035), "neon_cyan", false)
+			reflection.rotation.y = puddle.rotation.y
+		if i % 3 == 0:
+			var reflection_pink := _box(self, "NeonReflection_Pink_%02d" % i, Vector3(px - 0.08, 0.020, pz - 0.06), Vector3(puddle_width * 0.42, 0.004, 0.022), "neon_pink", false)
+			reflection_pink.rotation.y = puddle.rotation.y
 	# Sidewalk props make the street feel like a place to wander, not a road corridor.
 	for side in [-1.0, 1.0]:
 		for z in range(78, 207, 36):
@@ -666,17 +674,17 @@ func _build_rain() -> void:
 	var rain := CPUParticles3D.new()
 	rain.name = "NightRain"
 	rain.position = Vector3(0, 18.0, 139.0)
-	rain.amount = 500
-	rain.lifetime = 1.8
-	rain.preprocess = 0.35
+	rain.amount = 420
+	rain.lifetime = 1.55
+	rain.preprocess = 0.25
 	rain.emitting = true
-	rain.direction = Vector3(-0.12, -1.0, 0.0)
-	rain.spread = 7.0
-	rain.gravity = Vector3(0.0, -18.0, 0.0)
-	rain.initial_velocity_min = 13.0
-	rain.initial_velocity_max = 19.0
-	rain.scale_amount_min = 0.55
-	rain.scale_amount_max = 1.25
+	rain.direction = Vector3(-0.16, -1.0, 0.0)
+	rain.spread = 5.0
+	rain.gravity = Vector3(0.0, -20.0, 0.0)
+	rain.initial_velocity_min = 15.0
+	rain.initial_velocity_max = 21.0
+	rain.scale_amount_min = 0.45
+	rain.scale_amount_max = 1.0
 	rain.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
 	rain.emission_box_extents = Vector3(22.0, 1.0, 78.0)
 	var drop_mesh := BoxMesh.new()
@@ -697,22 +705,19 @@ func _build_lighting() -> void:
 	env.background_color = Color("080f20")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color("7187b4")
-	env.ambient_light_energy = 0.36
+	env.ambient_light_energy = 0.4
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.04
-	env.ambient_light_energy = 0.32
+	env.tonemap_exposure = 1.0
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_BG
 	env.glow_enabled = true
-	env.glow_intensity = 0.42
-	env.glow_bloom = 0.14
+	env.glow_intensity = 0.48
+	env.glow_bloom = 0.12
+	# Screen-space reflections and SSAO are deliberately disabled for mobile renderer stability.
 	env.ssao_enabled = false
-	env.ssao_radius = 2.2
-	env.ssao_intensity = 1.55
 	env.ssr_enabled = false
-	env.ssr_max_steps = 64
 	env.adjustment_enabled = true
-	env.adjustment_contrast = 1.08
-	env.adjustment_saturation = 1.06
+	env.adjustment_contrast = 1.06
+	env.adjustment_saturation = 1.08
 	world.environment = env
 	add_child(world)
 	var sun := DirectionalLight3D.new()
