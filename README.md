@@ -10,6 +10,8 @@ A mobile 3D mukbang game prototype made with Godot 4.
 - GLB assets contain PBR base-colour, metallic/roughness and normal texture channels
 - Separate 128×128 PNG texture maps are available under `assets/textures/`
 - Eight food counters, menu boards, food displays and order kiosks
+- Interactive self-service food ordering at kiosks: crispy/spicy chicken, wings, nuggets, sushi rolls, burgers, fries, pizza, noodles, drinks and desserts
+- Working shopping flow with a cart, item quantities, prices, a 5,000 ₽ starting balance, checkout and order-ready notification; press **E** near a kiosk (or tap **ЗАКАЗАТЬ** on mobile)
 - Procedural furniture, floor tile seams, architectural trim and real-time lighting
 
 ## PBR texture library (4K source maps, Android-conscious)
