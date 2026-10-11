@@ -81,7 +81,8 @@ func _apply_pbr(key: String, family: String) -> void:
 	material.metallic_texture = load(root + "metallic_512.png") as Texture2D
 	material.normal_enabled = true
 	material.roughness = 1.0
-	material.metallic = 1.0
+	# Only metal surfaces should use a metallic workflow; food and wood must stay dielectric.
+	material.metallic = 0.82 if family == "metal" else 0.0
 	# Slightly stronger micro-surface detail; keep food subtle so it does not look plastic.
 	match family:
 		"food":
