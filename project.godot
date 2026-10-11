@@ -20,6 +20,6 @@ renderer/rendering_method.mobile="mobile"
 anti_aliasing/quality/msaa_3d=1
 anti_aliasing/quality/screen_space_aa=0
 occlusion_culling/use_occlusion_culling=true
-rendering/textures/vram_compression/import_etc2_astc=true
+textures/vram_compression/import_etc2_astc=true
 rendering/textures/default_filters/anisotropic_filtering_level=4
 environment/defaults/default_clear_color=Color(0.035, 0.045, 0.065, 1)
