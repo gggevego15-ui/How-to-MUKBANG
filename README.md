@@ -63,5 +63,9 @@ On Android/iOS, a virtual joystick appears in the lower-left corner: drag it to 
 
 The first-person camera includes visible legs and shoes when looking down. A lightweight directional screen-space blur briefly appears during fast mouse turns and fades smoothly. The controller is in `scripts/player_controller.gd`.
 
+## Android performance profiles
+
+The runtime graphics toggle cycles between **Eco**, **Balanced**, and **High** and saves the choice to `user://graphics.cfg`. It adjusts 3D render scale, glow, the number of active unshadowed omni lights, rain particle count, NPC movement updates and the frame-rate cap. Android starts in Balanced mode; desktop starts in High mode. Project MSAA is reduced to 2× and screen-space AA is disabled to lower GPU cost. These are starting presets, not a guaranteed FPS: test on real Android devices before release.
+
 ## Android build
 The **Build How to MUKBANG Android** workflow imports assets, validates the 4K PBR maps, exports the Android APK, and uploads a downloadable Actions artifact. On the first successful push to `main`, it also creates the GitHub prerelease `v0.2.0-beta.2` with the APK attached. Subsequent pushes do not overwrite the published release. The build is a beta and should be tested on a real Android device before treating it as stable.
