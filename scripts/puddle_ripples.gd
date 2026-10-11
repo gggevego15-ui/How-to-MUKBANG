@@ -6,6 +6,8 @@ const CYCLE_SECONDS := 1.7
 var rings: Array[MeshInstance3D] = []
 var elapsed := 0.0
 var centers: Array[Vector3] = []
+var quality_count := RING_COUNT
+var quality_enabled := true
 
 func _ready() -> void:
 	set_process(true)
@@ -37,11 +39,20 @@ func configure(puddle_positions: Array[Vector3]) -> void:
 			break
 		rings[i].position = centers[i % centers.size()]
 
+func set_quality(enabled: bool, effect_count: int) -> void:
+	quality_enabled = enabled
+	quality_count = clampi(effect_count, 0, RING_COUNT)
+	for i in range(rings.size()):
+		rings[i].visible = enabled and i < quality_count
+
 func _process(delta: float) -> void:
 	if centers.is_empty():
 		return
 	elapsed += delta
 	for i in range(rings.size()):
+		if not quality_enabled or i >= quality_count:
+			rings[i].visible = false
+			continue
 		var phase := fposmod(elapsed / CYCLE_SECONDS + float(i) / float(RING_COUNT), 1.0)
 		var ring := rings[i]
 		var center := centers[i % centers.size()]
