@@ -795,22 +795,22 @@ func _build_main_menu() -> void:
 	var backdrop := ColorRect.new()
 	backdrop.name = "Backdrop"
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	backdrop.color = Color(0.015, 0.025, 0.045, 0.82)
+	backdrop.color = Color(0.008, 0.014, 0.028, 0.76)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
 	_main_menu_root.add_child(backdrop)
 
 	var layout := HBoxContainer.new()
 	layout.name = "MenuLayout"
 	layout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	layout.add_theme_constant_override("separation", 24)
+	layout.add_theme_constant_override("separation", 18)
 	_main_menu_root.add_child(layout)
 
 	var left_margin := MarginContainer.new()
 	left_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	left_margin.add_theme_constant_override("margin_left", 48)
-	left_margin.add_theme_constant_override("margin_top", 30)
-	left_margin.add_theme_constant_override("margin_bottom", 30)
+	left_margin.add_theme_constant_override("margin_left", 42)
+	left_margin.add_theme_constant_override("margin_top", 48)
+	left_margin.add_theme_constant_override("margin_bottom", 38)
 	layout.add_child(left_margin)
 
 	var intro := VBoxContainer.new()
@@ -819,44 +819,47 @@ func _build_main_menu() -> void:
 	left_margin.add_child(intro)
 
 	var eyebrow := Label.new()
-	eyebrow.text = "THE ULTIMATE FOOD COURT"
-	eyebrow.add_theme_font_size_override("font_size", 16)
+	eyebrow.text = "A LIVING FOOD CITY  /  AFTER DARK"
+	eyebrow.add_theme_font_size_override("font_size", 13)
 	eyebrow.add_theme_color_override("font_color", Color("65d9ff"))
 	intro.add_child(eyebrow)
 
 	var title := Label.new()
 	title.text = "HOW TO\nMUKBANG"
-	title.add_theme_font_size_override("font_size", 58)
+	title.add_theme_font_size_override("font_size", 52)
+	title.add_theme_constant_override("shadow_offset_x", 2)
+	title.add_theme_constant_override("shadow_offset_y", 4)
+	title.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.72))
 	title.add_theme_color_override("font_color", Color("f5f8ff"))
 	intro.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "Explore. Grab a bite. Make it your mall."
+	subtitle.text = "A rainy night. A thousand cravings. Your table, your story."
 	subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	subtitle.add_theme_font_size_override("font_size", 18)
+	subtitle.add_theme_font_size_override("font_size", 16)
 	subtitle.add_theme_color_override("font_color", Color("c1ccdc"))
 	intro.add_child(subtitle)
 
 	var accent := ColorRect.new()
-	accent.custom_minimum_size = Vector2(112, 4)
+	accent.custom_minimum_size = Vector2(148, 3)
 	accent.color = Color("65d9ff")
 	intro.add_child(accent)
 
 	var menu_margin := MarginContainer.new()
-	menu_margin.custom_minimum_size = Vector2(310, 0)
+	menu_margin.custom_minimum_size = Vector2(292, 0)
 	menu_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	menu_margin.add_theme_constant_override("margin_right", 42)
-	menu_margin.add_theme_constant_override("margin_top", 42)
-	menu_margin.add_theme_constant_override("margin_bottom", 42)
+	menu_margin.add_theme_constant_override("margin_right", 34)
+	menu_margin.add_theme_constant_override("margin_top", 46)
+	menu_margin.add_theme_constant_override("margin_bottom", 36)
 	layout.add_child(menu_margin)
 
 	var menu_card := PanelContainer.new()
 	menu_card.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var card_style := StyleBoxFlat.new()
-	card_style.bg_color = Color(0.035, 0.055, 0.085, 0.94)
-	card_style.border_color = Color(0.30, 0.72, 0.92, 0.8)
+	card_style.bg_color = Color(0.018, 0.032, 0.052, 0.94)
+	card_style.border_color = Color(0.36, 0.82, 1.0, 0.65)
 	card_style.set_border_width_all(1)
-	card_style.set_corner_radius_all(18)
+	card_style.set_corner_radius_all(8)
 	card_style.content_margin_left = 24
 	card_style.content_margin_right = 24
 	card_style.content_margin_top = 28
@@ -869,9 +872,9 @@ func _build_main_menu() -> void:
 	menu_card.add_child(menu_buttons)
 
 	var menu_heading := Label.new()
-	menu_heading.text = "MAIN MENU"
+	menu_heading.text = "STEP INTO THE MALL"
 	menu_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	menu_heading.add_theme_font_size_override("font_size", 21)
+	menu_heading.add_theme_font_size_override("font_size", 17)
 	menu_heading.add_theme_color_override("font_color", Color("f5f8ff"))
 	menu_buttons.add_child(menu_heading)
 
@@ -890,11 +893,57 @@ func _build_main_menu() -> void:
 	)
 
 	var footer := Label.new()
-	footer.text = "WASD / TOUCH CONTROLS"
+	footer.text = "WASD / MOUSE  •  TOUCH ON MOBILE"
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	footer.add_theme_font_size_override("font_size", 11)
+	footer.add_theme_font_size_override("font_size", 10)
 	footer.add_theme_color_override("font_color", Color("8294aa"))
 	menu_buttons.add_child(footer)
+
+	# Cinematic letterbox bars and in-world title cards frame the live mall scene.
+	var top_bar := ColorRect.new()
+	top_bar.name = "CinematicTopBar"
+	top_bar.anchor_right = 1.0
+	top_bar.offset_bottom = 22.0
+	top_bar.color = Color(0.005, 0.008, 0.014, 0.88)
+	top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_main_menu_root.add_child(top_bar)
+
+	var bottom_bar := ColorRect.new()
+	bottom_bar.name = "CinematicBottomBar"
+	bottom_bar.anchor_top = 1.0
+	bottom_bar.anchor_right = 1.0
+	bottom_bar.offset_top = -24.0
+	bottom_bar.color = Color(0.005, 0.008, 0.014, 0.9)
+	bottom_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_main_menu_root.add_child(bottom_bar)
+
+	var scene_stamp := Label.new()
+	scene_stamp.name = "SceneStamp"
+	scene_stamp.text = "NIGHT SHIFT   •   RAINY CITY MALL"
+	scene_stamp.position = Vector2(22, 27)
+	scene_stamp.add_theme_font_size_override("font_size", 10)
+	scene_stamp.add_theme_color_override("font_color", Color(0.68, 0.84, 0.95, 0.9))
+	scene_stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_main_menu_root.add_child(scene_stamp)
+
+	var build_stamp := Label.new()
+	build_stamp.name = "BuildStamp"
+	build_stamp.text = "EARLY ACCESS  /  0.2.0"
+	build_stamp.anchor_left = 1.0
+	build_stamp.anchor_right = 1.0
+	build_stamp.offset_left = -210.0
+	build_stamp.offset_right = -22.0
+	build_stamp.offset_top = -20.0
+	build_stamp.offset_bottom = -3.0
+	build_stamp.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	build_stamp.add_theme_font_size_override("font_size", 10)
+	build_stamp.add_theme_color_override("font_color", Color(0.55, 0.68, 0.78, 0.88))
+	build_stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_main_menu_root.add_child(build_stamp)
+
+	var intro_tween := create_tween()
+	_main_menu_root.modulate.a = 0.0
+	intro_tween.tween_property(_main_menu_root, "modulate:a", 1.0, 0.85).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 	_build_settings_panel(menu_buttons)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
