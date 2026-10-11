@@ -194,7 +194,7 @@ func _eat_one() -> void:
 	if _is_eating or _servings.is_empty():
 		return
 	_is_eating = true
-	var food := _servings.pop_front()
+	var food: Node3D = _servings.pop_front() as Node3D
 	_play_bite_sound(food)
 	var tween := create_tween()
 	tween.set_parallel(true)
