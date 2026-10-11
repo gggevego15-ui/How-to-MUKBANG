@@ -29,6 +29,10 @@ func _ready() -> void:
 	_build_lighting()
 	_build_player_camera()
 	_build_main_menu()
+	var food_ordering := Node.new()
+	food_ordering.name = "FoodOrdering"
+	food_ordering.set_script(load("res://scripts/food_ordering.gd"))
+	add_child(food_ordering)
 
 func _material(key: String, color: Color, roughness: float = 0.7, metallic: float = 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
