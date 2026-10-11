@@ -51,7 +51,7 @@ jobs:
 
       - name: Install Android platform packages
         shell: bash
-        run: /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0"
+        run: /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "ndk;28.1.13356709" "cmake;3.10.2.4988404"
 
       - name: Install Godot and export templates
         shell: bash
