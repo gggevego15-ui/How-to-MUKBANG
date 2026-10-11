@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# Keep only the newest Android build queued for this branch.
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-android:
     runs-on: ubuntu-22.04
