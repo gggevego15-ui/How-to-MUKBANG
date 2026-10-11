@@ -142,9 +142,14 @@ func _make_materials() -> void:
 	_material("chrome", Color("aab7c4"), 0.2, 0.82)
 	_material("screen", Color("152c42"), 0.16)
 	_material("bun_seed", Color("f8e4b5"), 0.7)
+	_material("packaging", Color("f0e3c8"), 0.82)
+	_material("brand_ink", Color("b92f28"), 0.7)
+	_material("pickle", Color("3e8139"), 0.48)
+	_material("grill_mark", Color("30231e"), 0.9)
+	_material("glaze", Color("ffb6d8"), 0.24)
 
 	# Shared 4K SVG PBR maps; Godot rasterizes them on import and samples them with mipmapped filtering.
-	for key in ["bun", "bun_top", "patty", "lettuce", "tomato", "cheese", "fries", "paper", "cup_red", "drink", "salad", "bun_seed"]:
+	for key in ["bun", "bun_top", "patty", "lettuce", "tomato", "cheese", "fries", "paper", "cup_red", "drink", "salad", "bun_seed", "packaging", "brand_ink", "pickle", "grill_mark", "glaze"]:
 		_apply_pbr(key, "food")
 	for key in ["wood", "wood_light"]:
 		_apply_pbr(key, "wood")
@@ -200,8 +205,8 @@ func _sphere(parent: Node3D, label: String, pos: Vector3, scale: Vector3, materi
 	var mesh := SphereMesh.new()
 	mesh.radius = 0.5
 	mesh.height = 1.0
-	mesh.radial_segments = 16
-	mesh.rings = 8
+	mesh.radial_segments = 24
+	mesh.rings = 12
 	var visual := MeshInstance3D.new()
 	visual.name = label
 	visual.mesh = mesh
@@ -212,35 +217,100 @@ func _sphere(parent: Node3D, label: String, pos: Vector3, scale: Vector3, materi
 	return visual
 
 func _make_burger(origin: Vector3, index: int) -> void:
+	# Soft rounded bun, irregular leafy edge, melted cheese, seared patty and fresh toppings.
 	_sphere(self, "BurgerBottom_%d" % index, origin + Vector3(0, 0.12, 0), Vector3(0.58, 0.2, 0.48), "bun")
-	_box(self, "BurgerPatty_%d" % index, origin + Vector3(0, 0.24, 0), Vector3(0.52, 0.12, 0.44), "patty", false)
-	_box(self, "BurgerCheese_%d" % index, origin + Vector3(0, 0.32, 0), Vector3(0.55, 0.055, 0.48), "cheese", false)
-	_sphere(self, "BurgerLettuce_%d" % index, origin + Vector3(0, 0.37, 0), Vector3(0.59, 0.08, 0.49), "lettuce")
+	_sphere(self, "BurgerPatty_%d" % index, origin + Vector3(0, 0.245, 0), Vector3(0.55, 0.13, 0.455), "patty")
+	for mark in range(3):
+		var grill := _box(self, "PattyGrill_%d_%d" % [index, mark], origin + Vector3(-0.13 + float(mark) * 0.13, 0.312, 0.0), Vector3(0.035, 0.006, 0.39), "grill_mark", false)
+		grill.rotation.y = -0.22
+	_sphere(self, "BurgerCheese_%d" % index, origin + Vector3(0, 0.33, 0), Vector3(0.59, 0.045, 0.49), "cheese")
+	for leaf in range(7):
+		var a := float(leaf) * TAU / 7.0
+		_sphere(self, "LettuceRuffle_%d_%d" % [index, leaf], origin + Vector3(cos(a) * 0.255, 0.375 + float(leaf % 2) * 0.012, sin(a) * 0.21), Vector3(0.19, 0.055, 0.14), "lettuce")
+	for slice in range(3):
+		var a := float(slice) * TAU / 3.0 + 0.35
+		_sphere(self, "TomatoSlice_%d_%d" % [index, slice], origin + Vector3(cos(a) * 0.17, 0.405, sin(a) * 0.14), Vector3(0.15, 0.028, 0.13), "tomato")
 	_sphere(self, "BurgerTop_%d" % index, origin + Vector3(0, 0.49, 0), Vector3(0.6, 0.27, 0.5), "bun_top")
-	for seed in range(5):
-		var a := float(seed) * TAU / 5.0
-		_sphere(self, "SesameSeed_%d_%d" % [index, seed], origin + Vector3(cos(a) * 0.15, 0.625, sin(a) * 0.12), Vector3(0.035, 0.012, 0.02), "bun_seed")
+	for seed in range(9):
+		var a := float(seed) * 2.399963
+		var r := 0.05 + 0.17 * float(seed % 4) / 3.0
+		var y := 0.49 + 0.135 * sqrt(maxf(0.0, 1.0 - (r * r) / 0.09))
+		var sesame := _sphere(self, "SesameSeed_%d_%d" % [index, seed], origin + Vector3(cos(a) * r, y, sin(a) * r * 0.78), Vector3(0.034, 0.012, 0.018), "bun_seed")
+		sesame.rotation.z = -0.25 + float(seed % 3) * 0.25
+	for pickle_index in range(2):
+		_sphere(self, "Pickle_%d_%d" % [index, pickle_index], origin + Vector3(-0.11 + float(pickle_index) * 0.22, 0.42, 0.03), Vector3(0.12, 0.018, 0.065), "pickle")
 
 func _make_fries(origin: Vector3, index: int) -> void:
-	_box(self, "FriesSleeve_%d" % index, origin + Vector3(0, 0.22, 0), Vector3(0.42, 0.42, 0.3), "sign_orange", false)
-	for fry in range(7):
-		var x := -0.15 + float(fry % 4) * 0.1
-		var z := -0.07 + float(fry / 4) * 0.11
-		_box(self, "FrenchFry_%d_%d" % [index, fry], origin + Vector3(x, 0.48 + float(fry % 3) * 0.025, z), Vector3(0.055, 0.38, 0.055), "fries", false)
+	# Tapered paperboard sleeve with a printed front badge and uneven golden fries.
+	var sleeve_mesh := CylinderMesh.new()
+	sleeve_mesh.top_radius = 0.19
+	sleeve_mesh.bottom_radius = 0.135
+	sleeve_mesh.height = 0.4
+	var sleeve := MeshInstance3D.new()
+	sleeve.name = "FriesSleeve_%d" % index
+	sleeve.mesh = sleeve_mesh
+	sleeve.position = origin + Vector3(0, 0.22, 0)
+	sleeve.material_override = mats["sign_orange"]
+	self.add_child(sleeve)
+	_box(self, "FriesSleeveBadge_%d" % index, origin + Vector3(0, 0.24, 0.153), Vector3(0.2, 0.11, 0.018), "brand_ink", false)
+	for fry in range(9):
+		var x := -0.15 + float(fry % 4) * 0.095
+		var z := -0.07 + float(fry / 4) * 0.085
+		var fry_mesh := CylinderMesh.new()
+		fry_mesh.top_radius = 0.018 + float(fry % 3) * 0.002
+		fry_mesh.bottom_radius = 0.032
+		fry_mesh.height = 0.34 + float(fry % 4) * 0.035
+		var fry_visual := MeshInstance3D.new()
+		fry_visual.name = "FrenchFry_%d_%d" % [index, fry]
+		fry_visual.mesh = fry_mesh
+		fry_visual.position = origin + Vector3(x, 0.39 + float(fry % 3) * 0.025, z)
+		fry_visual.rotation.z = -0.12 + float(fry % 5) * 0.055
+		fry_visual.material_override = mats["fries"]
+		self.add_child(fry_visual)
 
 func _make_drink(origin: Vector3, index: int) -> void:
-	_cylinder(self, "DrinkCup_%d" % index, origin + Vector3(0, 0.28, 0), 0.17, 0.55, "cup_red", false)
-	_cylinder(self, "DrinkLid_%d" % index, origin + Vector3(0, 0.57, 0), 0.18, 0.045, "white", false)
-	_cylinder(self, "DrinkLiquid_%d" % index, origin + Vector3(0, 0.48, 0), 0.145, 0.12, "drink", false)
-	_box(self, "DrinkStraw_%d" % index, origin + Vector3(0.045, 0.72, 0), Vector3(0.025, 0.28, 0.025), "white", false)
+	# Slightly tapered branded cup, raised lid lip, dark drink and rounded straw.
+	var cup_mesh := CylinderMesh.new()
+	cup_mesh.top_radius = 0.14
+	cup_mesh.bottom_radius = 0.18
+	cup_mesh.height = 0.55
+	var cup := MeshInstance3D.new()
+	cup.name = "DrinkCup_%d" % index
+	cup.mesh = cup_mesh
+	cup.position = origin + Vector3(0, 0.28, 0)
+	cup.material_override = mats["cup_red"]
+	self.add_child(cup)
+	_cylinder(self, "DrinkLid_%d" % index, origin + Vector3(0, 0.57, 0), 0.155, 0.035, "white", false)
+	_cylinder(self, "DrinkLidRim_%d" % index, origin + Vector3(0, 0.55, 0), 0.17, 0.018, "white", false)
+	_cylinder(self, "DrinkLiquid_%d" % index, origin + Vector3(0, 0.49, 0), 0.125, 0.012, "drink", false)
+	_box(self, "DrinkBrandBand_%d" % index, origin + Vector3(0, 0.28, 0.146), Vector3(0.16, 0.13, 0.018), "brand_ink", false)
+	var straw_mesh := CylinderMesh.new()
+	straw_mesh.top_radius = 0.012
+	straw_mesh.bottom_radius = 0.012
+	straw_mesh.height = 0.27
+	var straw := MeshInstance3D.new()
+	straw.name = "DrinkStraw_%d" % index
+	straw.mesh = straw_mesh
+	straw.position = origin + Vector3(0.035, 0.72, 0)
+	straw.rotation.z = -0.1
+	straw.material_override = mats["white"]
+	self.add_child(straw)
+	for drop in range(4):
+		var a := float(drop) * TAU / 4.0
+		_sphere(self, "CupCondensation_%d_%d" % [index, drop], origin + Vector3(cos(a) * 0.145, 0.26 + float(drop % 2) * 0.1, sin(a) * 0.12), Vector3(0.014, 0.025, 0.014), "white")
 
 func _make_pizza(origin: Vector3, index: int) -> void:
+	# Golden crust ring, slightly raised sauce/cheese layers and varied toppings.
 	_cylinder(self, "PizzaCrust_%d" % index, origin + Vector3(0, 0.13, 0), 0.3, 0.09, "bun", false)
 	_cylinder(self, "PizzaSauce_%d" % index, origin + Vector3(0, 0.19, 0), 0.27, 0.035, "tomato", false)
 	_cylinder(self, "PizzaCheese_%d" % index, origin + Vector3(0, 0.215, 0), 0.255, 0.025, "cheese", false)
-	for topping in range(5):
-		var a := float(topping) * TAU / 5.0
-		_sphere(self, "Pepperoni_%d_%d" % [index, topping], origin + Vector3(cos(a) * 0.14, 0.24, sin(a) * 0.14), Vector3(0.09, 0.025, 0.09), "tomato")
+	for topping in range(7):
+		var a := float(topping) * 2.399963
+		var r := 0.07 + float(topping % 3) * 0.065
+		_sphere(self, "Pepperoni_%d_%d" % [index, topping], origin + Vector3(cos(a) * r, 0.24 + float(topping % 2) * 0.008, sin(a) * r), Vector3(0.065, 0.025, 0.065), "tomato")
+	for herb in range(4):
+		var a := float(herb) * TAU / 4.0 + 0.3
+		_sphere(self, "PizzaHerb_%d_%d" % [index, herb], origin + Vector3(cos(a) * 0.17, 0.243, sin(a) * 0.17), Vector3(0.035, 0.008, 0.012), "lettuce")
 
 func _make_food_display(vendor_index: int, x: float, z: float) -> void:
 	for j in range(3):
