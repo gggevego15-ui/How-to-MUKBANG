@@ -137,6 +137,19 @@ jobs:
       - name: Start Android Debug Bridge
         run: adb start-server
 
+      - name: Verify Godot Android export settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          settings="$HOME/.config/godot/editor_settings-4.tres"
+          echo "Editor settings file:"
+          cat "$settings"
+          test -d "$ANDROID_HOME"
+          test -d "$JAVA_HOME"
+          test -f "$HOME/.android/debug.keystore"
+          # Load the editor settings through Godot itself before attempting export.
+          godot --headless --editor --path . --quit
+
       - name: Validate project and import assets
         timeout-minutes: 22
         shell: bash
@@ -183,7 +196,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          timeout --signal=TERM --kill-after=20s 11m godot --headless --path . --export-debug "Android" build/How-to-MUKBANG-0.2.0-beta.2.apk 2>&1 | tee build/android-export.log
+          timeout --signal=TERM --kill-after=20s 11m godot --verbose --headless --editor --path . --export-debug "Android" build/How-to-MUKBANG-0.2.0-beta.2.apk 2>&1 | tee build/android-export.log
           test -s build/How-to-MUKBANG-0.2.0-beta.2.apk
 
       - name: Upload APK artifact
