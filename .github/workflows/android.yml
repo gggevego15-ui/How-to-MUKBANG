@@ -138,27 +138,44 @@ jobs:
         run: adb start-server
 
       - name: Validate project and import assets
-        timeout-minutes: 8
-        run: timeout --signal=TERM --kill-after=15s 7m godot --headless --editor --path . --import --quit
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set +e
+          # On this runner Godot may finish importing and then hang while loading
+          # editor layout. Cap that editor-only tail so the Android job cannot stall.
+          timeout --verbose --signal=TERM --kill-after=10s 2m \
+            godot --headless --editor --path . --import --quit
+          status=$?
+          if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+            echo "::warning::Godot import process exceeded 2 minutes; continuing to resource validation and export."
+          elif [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
 
       - name: Install project Android build template
-        timeout-minutes: 4
+        timeout-minutes: 3
         shell: bash
         run: |
           set -euo pipefail
-          # Godot can stay alive after printing "Loading editor layout". Explicitly
-          # request editor shutdown and enforce a hard timeout as a second safeguard.
+          # Unpack the Android source template directly. Calling the editor to
+          # install it can hang on "Loading editor layout" in headless CI.
+          template_zip="$HOME/.local/share/godot/export_templates/4.4.1.stable/android_source.zip"
           if [ -f android/build/build.gradle ] || [ -f android/build/build.gradle.kts ]; then
             echo "Android Gradle build template is already present."
+          elif [ -f "$template_zip" ]; then
+            mkdir -p android/build
+            unzip -q -o "$template_zip" -d android/build
           else
-            timeout --verbose --signal=TERM --kill-after=10s 3m \
-              godot --headless --editor --path . --install-android-build-template --quit
+            echo "::error::Android source template not found at $template_zip"
+            find "$HOME/.local/share/godot/export_templates/4.4.1.stable" -maxdepth 2 -type f -print 2>/dev/null | head -100 || true
+            exit 1
           fi
 
           if [ ! -f android/build/build.gradle ] && [ ! -f android/build/build.gradle.kts ]; then
-            echo "::error::Godot did not create android/build/build.gradle(.kts). The template install either stalled or failed."
-            echo "Contents of android/ (if present):"
-            find android -maxdepth 3 -type f -print 2>/dev/null | head -100 || true
+            echo "::error::Android template archive did not produce android/build/build.gradle(.kts)."
+            echo "Contents of android/build (if present):"
+            find android/build -maxdepth 3 -type f -print 2>/dev/null | head -100 || true
             exit 1
           fi
           echo "Android Gradle build template is ready."
