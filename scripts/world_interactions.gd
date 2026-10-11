@@ -25,24 +25,32 @@ func _process(_delta: float) -> void:
 	if _player == null or _camera == null:
 		return
 	if _player.has_method("is_seated") and _player.is_seated():
-		_prompt.text = "E  ·  Встать"
+		_active_target = null
+		_prompt.text = "Нажмите, чтобы встать"
 		_prompt.visible = true
 		if _touch_button != null:
 			_touch_button.text = "ВСТАТЬ"
 			_touch_button.visible = true
 		return
 	_active_target = _find_target()
-	if _active_target == null:
-		_prompt.visible = false
+	if _active_target != null:
+		var label := str(_active_target.get_meta("interaction_label", "Взаимодействовать"))
+		_prompt.text = "Нажмите, чтобы: " + label
+		_prompt.visible = true
 		if _touch_button != null:
-			_touch_button.visible = false
+			_touch_button.text = label.to_upper()
+			_touch_button.visible = true
 		return
-	var label := str(_active_target.get_meta("interaction_label", "Взаимодействовать"))
-	_prompt.text = "E  ·  " + label
-	_prompt.visible = true
+	if _is_near_kiosk():
+		_prompt.text = "Нажмите, чтобы открыть меню заказа"
+		_prompt.visible = true
+		if _touch_button != null:
+			_touch_button.text = "ЗАКАЗАТЬ ЕДУ"
+			_touch_button.visible = true
+		return
+	_prompt.visible = false
 	if _touch_button != null:
-		_touch_button.text = label
-		_touch_button.visible = true
+		_touch_button.visible = false
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
@@ -70,13 +78,28 @@ func _find_target() -> Node3D:
 			best_distance = distance
 	return best
 
+func _is_near_kiosk() -> bool:
+	if _player == null:
+		return false
+	for i in range(6):
+		var kiosk_pos := Vector3(-17.5 + float(i) * 7.0, 0.0, -32.0)
+		var distance := Vector2(_player.global_position.x - kiosk_pos.x, _player.global_position.z - kiosk_pos.z).length()
+		if distance < 3.4:
+			return true
+	return false
+
 func _interact() -> void:
-	if _active_target == null or not is_instance_valid(_active_target):
-		return
-	if _player.has_method("is_seated") and _player.is_seated():
+	if _player != null and _player.has_method("is_seated") and _player.is_seated():
 		_player.set_seated(false)
 		_show_toast("Вы встали из-за стола")
 		_active_target = null
+		return
+	if (_active_target == null or not is_instance_valid(_active_target)) and _is_near_kiosk():
+		var ordering := get_parent().get_node_or_null("FoodOrdering")
+		if ordering != null and ordering.has_method("_open_menu"):
+			ordering.call("_open_menu")
+		return
+	if _active_target == null or not is_instance_valid(_active_target):
 		return
 	match str(_active_target.get_meta("interaction_type", "")):
 		"seat":
@@ -183,7 +206,7 @@ func _build_interaction_ui() -> void:
 	if _touch_mode:
 		_touch_button = Button.new()
 		_touch_button.name = "InteractButton"
-		_touch_button.custom_minimum_size = Vector2(270, 66)
+		_touch_button.custom_minimum_size = Vector2(250, 70)
 		_touch_button.focus_mode = Control.FOCUS_NONE
 		_touch_button.add_theme_font_size_override("font_size", 18)
 		var style := StyleBoxFlat.new()
@@ -202,7 +225,9 @@ func _layout_touch_button() -> void:
 	if _touch_button == null:
 		return
 	var size := get_viewport().get_visible_rect().size
-	_touch_button.position = Vector2(size.x - 300.0, size.y - 292.0)
+	var scale_factor := clampf(minf(size.x / 960.0, size.y / 540.0), 0.8, 1.3)
+	_touch_button.size = Vector2(250.0, 70.0) * scale_factor
+	_touch_button.position = Vector2(size.x - _touch_button.size.x - 28.0 * scale_factor, size.y - _touch_button.size.y - 42.0 * scale_factor)
 
 func _show_toast(message: String) -> void:
 	_toast_generation += 1
