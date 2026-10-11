@@ -138,13 +138,13 @@ jobs:
         run: adb start-server
 
       - name: Validate project and import assets
-        timeout-minutes: 6
+        timeout-minutes: 22
         shell: bash
         run: |
           set -euo pipefail
-          # --quit can leave the headless editor waiting on editor-layout setup.
-          # --quit-after gives Godot a bounded number of frames to finish scanning/importing.
-          timeout --verbose --signal=TERM --kill-after=10s 5m \
+          # 4K SVG PBR maps can take several minutes to rasterize on a fresh runner.
+          # Give the full import enough time to finish so Godot's imported resources exist.
+          timeout --verbose --signal=TERM --kill-after=15s 20m \
             godot --headless --editor --path . --import --quit-after 5
 
       - name: Install project Android build template
