@@ -55,7 +55,7 @@ func _process(_delta: float) -> void:
 		nearest = minf(nearest, Vector2(_player.global_position.x - kiosk_pos.x, _player.global_position.z - kiosk_pos.z).length())
 	_near_kiosk = nearest < 3.4
 	_hint.visible = _near_kiosk and not _menu_open
-	_mobile_order_button.visible = _near_kiosk and not _menu_open
+	_mobile_order_button.visible = false
 	if _near_kiosk and Input.is_key_pressed(KEY_E) and not _menu_open:
 		_open_menu()
 		await get_tree().create_timer(0.25).timeout
@@ -330,7 +330,7 @@ func _close_menu() -> void:
 	get_meta("order_shade").visible = false
 	get_meta("order_panel").visible = false
 	_hint.visible = _near_kiosk
-	_mobile_order_button.visible = _near_kiosk
+	_mobile_order_button.visible = false
 	if _player != null:
 		_player.set_physics_process(true)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
