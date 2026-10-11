@@ -10,6 +10,7 @@ var mats: Dictionary = {}
 var imported_chair_scene: PackedScene
 var imported_burger_scene: PackedScene
 var imported_kiosk_scene: PackedScene
+var ambience_manager: Node
 
 func _ready() -> void:
 	imported_chair_scene = load("res://assets/models/cafe_chair.glb") as PackedScene
@@ -40,6 +41,10 @@ func _ready() -> void:
 	food_ordering.set_script(load("res://scripts/food_ordering.gd"))
 	add_child(food_ordering)
 	# Apply mobile-friendly graphics presets after all scene effects and NPCs exist.
+	var ambience := Node.new()
+	ambience.name = "RestaurantAmbience"
+	ambience.set_script(load("res://scripts/restaurant_ambience.gd"))
+	add_child(ambience)
 	var performance_manager := Node.new()
 	performance_manager.name = "MobilePerformance"
 	performance_manager.set_script(load("res://scripts/mobile_performance.gd"))
