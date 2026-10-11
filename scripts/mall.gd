@@ -25,6 +25,7 @@ func _ready() -> void:
 	_build_upper_gallery()
 	_build_decor()
 	_build_street()
+	_build_npc_visitors()
 	_build_rain()
 	_build_lighting()
 	_build_player_camera()
@@ -554,6 +555,59 @@ func _build_street_shop(side: float, building_z: float, building_id: int, buildi
 	interior_light.omni_range = 13.0
 	interior_light.shadow_enabled = false
 	add_child(interior_light)
+
+
+func _build_npc_visitors() -> void:
+	# A dozen low-poly visitors circulate through the food court and atrium.
+	var mall_routes: Array = [
+		[Vector3(-28, 0, -24), Vector3(-8, 0, -25), Vector3(15, 0, -22), Vector3(29, 0, -8), Vector3(24, 0, 18), Vector3(5, 0, 27), Vector3(-22, 0, 18), Vector3(-30, 0, -2)],
+		[Vector3(-47, 0, -12), Vector3(-35, 0, 5), Vector3(-25, 0, 27), Vector3(-8, 0, 35), Vector3(18, 0, 36), Vector3(42, 0, 23), Vector3(45, 0, -8), Vector3(27, 0, -27)],
+		[Vector3(-45, 0, 35), Vector3(-24, 0, 40), Vector3(0, 0, 43), Vector3(28, 0, 39), Vector3(45, 0, 22), Vector3(34, 0, 4), Vector3(12, 0, 8), Vector3(-15, 0, 8)],
+		[Vector3(-18, 0, -31), Vector3(0, 0, -28), Vector3(18, 0, -30), Vector3(30, 0, -18), Vector3(17, 0, -4), Vector3(-6, 0, -7), Vector3(-23, 0, -15)]
+	]
+	var outfit_colors: Array[Color] = [Color("4bb8e8"), Color("ff9b61"), Color("c58aff"), Color("55c99a"), Color("f06f93"), Color("e4c45e")]
+	for i in range(12):
+		var visitor := Node3D.new()
+		visitor.name = "MallVisitor_%02d" % i
+		visitor.set_script(load("res://scripts/npc_visitor.gd"))
+		var route: Array[Vector3] = []
+		var source_route: Array = mall_routes[i % mall_routes.size()]
+		for point in source_route:
+			route.append(point)
+		visitor.set("waypoints", route)
+		visitor.set("walk_speed", 0.9 + float(i % 5) * 0.16)
+		visitor.set("outfit_color", outfit_colors[i % outfit_colors.size()])
+		visitor.set("skin_color", Color("d7a17e") if i % 3 != 0 else Color("8e5b43"))
+		visitor.set("start_waypoint", i % route.size())
+		visitor.position = route[i % route.size()]
+		add_child(visitor)
+
+	# A smaller group walks through open street-shop entrances, pauses inside,
+	# and heads back out onto the wet sidewalk.
+	for i in range(6):
+		var side := -1.0 if i % 2 == 0 else 1.0
+		var shop_z := 72.0 + float(i) * 28.0
+		var door_x := side * 29.0
+		var inner_x := side * 36.0
+		var route: Array[Vector3] = [
+			Vector3(side * 24.8, 0, shop_z + 5.0),
+			Vector3(door_x, 0, shop_z + 1.0),
+			Vector3(inner_x, 0, shop_z - 1.0),
+			Vector3(inner_x, 0, shop_z + 5.0),
+			Vector3(door_x, 0, shop_z + 1.0),
+			Vector3(side * 24.8, 0, shop_z + 5.0),
+			Vector3(side * 24.8, 0, shop_z + 12.0)
+		]
+		var visitor := Node3D.new()
+		visitor.name = "StreetShopVisitor_%02d" % i
+		visitor.set_script(load("res://scripts/npc_visitor.gd"))
+		visitor.set("waypoints", route)
+		visitor.set("walk_speed", 0.85 + float(i % 3) * 0.18)
+		visitor.set("outfit_color", outfit_colors[(i + 2) % outfit_colors.size()])
+		visitor.set("skin_color", Color("c88d68") if i % 2 == 0 else Color("8e5b43"))
+		visitor.set("start_waypoint", 0)
+		visitor.position = route[0]
+		add_child(visitor)
 
 func _build_rain() -> void:
 	# Dense rain is confined to the exterior street area, with visible streaks and wet ground.
