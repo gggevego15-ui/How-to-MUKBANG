@@ -511,7 +511,7 @@ func _build_street() -> void:
 func _build_puddle_ripples() -> void:
 	# A tiny pool of reusable rings: no physics, shaders, or per-drop nodes.
 	var ripple_root := Node3D.new()
-	ripple_root.name = "RainPuddleRipples"
+	ripple_root.name = "RainPuddleEffects"
 	ripple_root.set_script(load("res://scripts/puddle_ripples.gd"))
 	add_child(ripple_root)
 	var puddle_positions: Array[Vector3] = []
