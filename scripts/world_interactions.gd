@@ -71,8 +71,6 @@ func _interact() -> void:
 			var door := _active_target
 			var is_open := absf(door.rotation.y) > 0.6
 			var target_angle := 0.0 if is_open else (PI * 0.5)
-			if not is_open and int(door.name.get_slice("_", 1)) % 2 == 1:
-				target_angle = -PI * 0.5
 			var tween := create_tween()
 			tween.set_trans(Tween.TRANS_CUBIC)
 			tween.set_ease(Tween.EASE_IN_OUT)
@@ -81,7 +79,7 @@ func _interact() -> void:
 		"sign":
 			_active_target.visible = not _active_target.visible
 			_show_toast("Неон включён" if _active_target.visible else "Неон выключен")
-		_active_target = null
+	_active_target = null
 
 func _build_interaction_ui() -> void:
 	var layer := CanvasLayer.new()
