@@ -18,6 +18,8 @@ A mobile 3D mukbang game prototype made with Godot 4.
 - Eating animation: press **F** or tap **ЕСТЬ**; each portion lifts, tilts and disappears, with a floating feedback label and a simple fullness percentage
 - Food-specific procedural bite audio: crisp crackling crunches for fried chicken and fries, layered crunch and low bite impacts for burgers and pizza, softer moist sounds for sushi and desserts, slurping for noodles and drinks, plus fizzy hiss for cola and lemonade. Audio is synthesized locally by Godot at runtime, so no external sound files or network access are needed.
 - Interactive street-shop doors swing open and closed with a smooth hinge animation; aim at a nearby door and press **E** or tap the Android interaction button
+- Atrium benches are interactive: approach and face a seat to see a contextual prompt, then press **E** or tap the action button for a spring/bounce animation and a rest message
+- Street neon signs animate when switched on/off with a quick scale-in/scale-out transition; world interactions use the same proximity prompt on desktop and Android
 - Street neon signs can be switched on/off from nearby; contextual prompts and feedback messages work on desktop and touch screens
 - Procedural furniture, floor tile seams, architectural trim and real-time lighting
 
