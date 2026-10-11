@@ -48,21 +48,59 @@ func _ready() -> void:
 
 	var outfit := StandardMaterial3D.new()
 	outfit.albedo_color = outfit_color
-	outfit.roughness = 0.82
+	outfit.roughness = 0.72
+	outfit.metallic = 0.0
 	var skin := StandardMaterial3D.new()
 	skin.albedo_color = skin_color
-	skin.roughness = 0.9
+	skin.roughness = 0.74
 	var shoes := StandardMaterial3D.new()
 	shoes.albedo_color = Color("202634")
-	shoes.roughness = 0.8
+	shoes.roughness = 0.68
+	var hair_material := StandardMaterial3D.new()
+	var hair_colors := [Color("241a17"), Color("493126"), Color("171b22"), Color("76543b")]
+	hair_material.albedo_color = hair_colors[posmod(get_instance_id(), hair_colors.size())]
+	hair_material.roughness = 0.82
+	var eye_material := StandardMaterial3D.new()
+	eye_material.albedo_color = Color("171b22")
+	eye_material.roughness = 0.28
+	var white_material := StandardMaterial3D.new()
+	white_material.albedo_color = Color("f8f3e9")
+	white_material.roughness = 0.42
+	var accent_material := StandardMaterial3D.new()
+	accent_material.albedo_color = outfit_color.lightened(0.25)
+	accent_material.roughness = 0.6
 
 	_body = _capsule_part("Body", 0.27, 0.78, Vector3(0, 1.02, 0), outfit)
+	_capsule_part("Neck", 0.075, 0.16, Vector3(0, 1.43, 0), skin)
 	_capsule_part("Head", 0.19, 0.38, Vector3(0, 1.68, 0), skin)
-	_capsule_part("Hair", 0.195, 0.12, Vector3(0, 1.84, -0.025), shoes)
+	_sphere_part("HairCap", Vector3(0, 1.825, 0.005), Vector3(0.36, 0.18, 0.35), hair_material)
+	_sphere_part("HairBack", Vector3(0, 1.72, 0.105), Vector3(0.34, 0.30, 0.22), hair_material)
+	_sphere_part("LeftEar", Vector3(-0.185, 1.68, 0), Vector3(0.075, 0.105, 0.075), skin)
+	_sphere_part("RightEar", Vector3(0.185, 1.68, 0), Vector3(0.075, 0.105, 0.075), skin)
+	# Eyes, brows, nose and a small smile make visitors read as people rather than blank mannequins.
+	_sphere_part("LeftEyeWhite", Vector3(-0.067, 1.705, -0.164), Vector3(0.052, 0.045, 0.025), white_material)
+	_sphere_part("RightEyeWhite", Vector3(0.067, 1.705, -0.164), Vector3(0.052, 0.045, 0.025), white_material)
+	_sphere_part("LeftPupil", Vector3(-0.065, 1.704, -0.185), Vector3(0.024, 0.029, 0.014), eye_material)
+	_sphere_part("RightPupil", Vector3(0.069, 1.704, -0.185), Vector3(0.024, 0.029, 0.014), eye_material)
+	_sphere_part("LeftBrow", Vector3(-0.067, 1.755, -0.158), Vector3(0.07, 0.018, 0.022), hair_material)
+	_sphere_part("RightBrow", Vector3(0.067, 1.755, -0.158), Vector3(0.07, 0.018, 0.022), hair_material)
+	_sphere_part("Nose", Vector3(0, 1.665, -0.19), Vector3(0.045, 0.06, 0.045), skin)
+	_sphere_part("Smile", Vector3(0, 1.615, -0.177), Vector3(0.085, 0.018, 0.018), eye_material)
+	# Shirt collar, buttons and cuffs add small readable clothing details at normal play distance.
+	_sphere_part("CollarLeft", Vector3(-0.085, 1.355, -0.12), Vector3(0.13, 0.09, 0.055), accent_material)
+	_sphere_part("CollarRight", Vector3(0.085, 1.355, -0.12), Vector3(0.13, 0.09, 0.055), accent_material)
+	for button_index in range(3):
+		_sphere_part("ShirtButton_%d" % button_index, Vector3(0, 1.25 - float(button_index) * 0.13, -0.137), Vector3(0.025, 0.025, 0.018), white_material)
 	_left_leg = _capsule_part("LeftLeg", 0.085, 0.48, Vector3(-0.115, 0.34, 0), shoes)
 	_right_leg = _capsule_part("RightLeg", 0.085, 0.48, Vector3(0.115, 0.34, 0), shoes)
 	_left_arm = _capsule_part("LeftArm", 0.075, 0.48, Vector3(-0.34, 1.02, 0), skin)
 	_right_arm = _capsule_part("RightArm", 0.075, 0.48, Vector3(0.34, 1.02, 0), skin)
+	_sphere_part("LeftSleeve", Vector3(-0.29, 1.17, 0), Vector3(0.17, 0.22, 0.18), outfit)
+	_sphere_part("RightSleeve", Vector3(0.29, 1.17, 0), Vector3(0.17, 0.22, 0.18), outfit)
+	_sphere_part("LeftHand", Vector3(-0.35, 0.77, 0), Vector3(0.12, 0.13, 0.12), skin)
+	_sphere_part("RightHand", Vector3(0.35, 0.77, 0), Vector3(0.12, 0.13, 0.12), skin)
+	_sphere_part("LeftShoe", Vector3(-0.115, 0.09, -0.045), Vector3(0.16, 0.12, 0.26), shoes)
+	_sphere_part("RightShoe", Vector3(0.115, 0.09, -0.045), Vector3(0.16, 0.12, 0.26), shoes)
 
 	_emotion_label = Label3D.new()
 	_emotion_label.name = "Emotion"
@@ -95,6 +133,21 @@ func _ready() -> void:
 		_say(_queue_lines[posmod(queue_slot, _queue_lines.size())], 2.5)
 		_pause_left = queue_wait_seconds + float(queue_slot) * 0.25
 		_pause_action = "queue"
+
+func _sphere_part(label: String, part_position: Vector3, dimensions: Vector3, material: Material) -> MeshInstance3D:
+	var part := MeshInstance3D.new()
+	part.name = label
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.5
+	mesh.height = 1.0
+	mesh.radial_segments = 16
+	mesh.rings = 8
+	part.mesh = mesh
+	part.position = part_position
+	part.scale = dimensions
+	part.material_override = material
+	add_child(part)
+	return part
 
 func _capsule_part(label: String, radius: float, height: float, part_position: Vector3, material: Material) -> MeshInstance3D:
 	var part := MeshInstance3D.new()
