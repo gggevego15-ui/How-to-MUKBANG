@@ -408,6 +408,7 @@ func _build_street() -> void:
 			var height := 9.0 + float((z / 7) % 3) * 2.0
 			_box(self, "StreetBuilding_%s_%d" % [str(side), z], Vector3(side * 39.0, height * 0.5, building_z), Vector3(20.0, height, 22.0), "brick")
 			_box(self, "BuildingRoofTrim_%s_%d" % [str(side), z], Vector3(side * 39.0, height, building_z), Vector3(20.3, 0.28, 22.3), "metal", false)
+			_build_street_shop(side, building_z, z, height)
 			for floor_index in range(1, 4):
 				for window_index in range(4):
 					var wx := side * 39.0 + (float(window_index) - 1.5) * 4.2
@@ -441,6 +442,44 @@ func _build_street() -> void:
 		for z in range(78, 207, 36):
 			_cylinder(self, "StreetTreeTrunk_%s_%d" % [str(side), z], Vector3(side * 26.0, 1.5, float(z)), 0.22, 3.0, "wood", false)
 			_sphere(self, "StreetTreeCanopy_%s_%d" % [str(side), z], Vector3(side * 26.0, 4.0, float(z)), Vector3(2.5, 3.0, 2.5), "plant")
+
+func _build_street_shop(side: float, building_z: float, building_id: int, building_height: float) -> void:
+	# Street-facing storefronts with walk-in doors, display glazing and furnished interiors.
+	var front_x := side * 28.92
+	var inside_x := side * 35.8
+	var shop_floor := Vector3(side * 35.8, 0.12, building_z)
+	_box(self, "ShopInteriorFloor_%d" % building_id, shop_floor, Vector3(13.2, 0.18, 18.0), "tile_dark")
+	_box(self, "ShopInteriorCeiling_%d" % building_id, Vector3(side * 35.8, 3.65, building_z), Vector3(13.2, 0.18, 18.0), "black", false)
+	# Warm interior lighting and a dark rear wall make the rooms readable at night.
+	_box(self, "ShopBackWall_%d" % building_id, Vector3(side * 42.2, 2.0, building_z), Vector3(0.22, 3.8, 17.8), "brick")
+	for section in range(3):
+		var section_z := building_z - 6.0 + float(section) * 6.0
+		# Wide front display panes on both sides of the entrance.
+		if section != 1:
+			_box(self, "ShopfrontGlass_%d_%d" % [building_id, section], Vector3(front_x, 2.0, section_z), Vector3(0.10, 3.3, 5.7), "glass", false)
+			_box(self, "ShopWindowFrame_%d_%d" % [building_id, section], Vector3(front_x - side * 0.08, 2.0, section_z), Vector3(0.12, 3.55, 5.95), "metal", false)
+	# Recessed door and glowing sign above the entrance.
+	_box(self, "ShopDoorFrame_%d" % building_id, Vector3(front_x, 1.55, building_z), Vector3(0.16, 3.05, 2.0), "chrome", false)
+	_box(self, "ShopDoorGlass_%d" % building_id, Vector3(front_x - side * 0.04, 1.55, building_z), Vector3(0.08, 2.8, 1.72), "glass", false)
+	_box(self, "ShopSign_%d" % building_id, Vector3(front_x - side * 0.18, 4.05, building_z), Vector3(0.18, 0.65, 7.8), "neon_pink" if building_id % 2 == 0 else "neon_cyan", false)
+	# Counters, stocked display shelves and small display plinths inside each shop.
+	for shelf in range(3):
+		var shelf_z := building_z - 6.0 + float(shelf) * 6.0
+		_box(self, "ShopShelf_%d_%d" % [building_id, shelf], Vector3(side * 32.4, 1.35, shelf_z), Vector3(3.6, 0.18, 4.2), "wood", false)
+		_box(self, "ShopShelfUpper_%d_%d" % [building_id, shelf], Vector3(side * 32.4, 2.35, shelf_z), Vector3(3.6, 0.14, 4.2), "wood_light", false)
+		for item in range(4):
+			var item_z := shelf_z - 1.35 + float(item) * 0.9
+			_box(self, "ShopStock_%d_%d_%d" % [building_id, shelf, item], Vector3(side * 32.4, 1.75, item_z), Vector3(0.42, 0.62, 0.42), "sign_orange" if (item + shelf) % 2 == 0 else "sign_blue", false)
+	_box(self, "ShopCounter_%d" % building_id, Vector3(side * 38.0, 1.05, building_z + 5.8), Vector3(1.4, 1.7, 6.2), "wood_light")
+	_box(self, "ShopCounterTop_%d" % building_id, Vector3(side * 38.0, 1.95, building_z + 5.8), Vector3(1.55, 0.14, 6.35), "chrome", false)
+	var interior_light := OmniLight3D.new()
+	interior_light.name = "ShopInteriorGlow_%d" % building_id
+	interior_light.position = Vector3(side * 35.0, 3.0, building_z)
+	interior_light.light_color = Color("ffd5a1") if building_id % 2 == 0 else Color("a7e8ff")
+	interior_light.light_energy = 1.25
+	interior_light.omni_range = 13.0
+	interior_light.shadow_enabled = false
+	add_child(interior_light)
 
 func _build_rain() -> void:
 	# Dense rain is confined to the exterior street area, with visible streaks and wet ground.
