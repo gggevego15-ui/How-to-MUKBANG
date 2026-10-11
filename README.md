@@ -14,6 +14,8 @@ A mobile 3D mukbang game prototype made with Godot 4.
 - Working shopping flow with a cart, item quantities, prices, a 5,000 ₽ starting balance, checkout and order-ready notification; press **E** near a kiosk (or tap **ЗАКАЗАТЬ** on mobile)
 - Ordered food appears on the nearest dining table after a short preparation delay, with pop-in serving animations and distinct procedural 3D food for chicken, sushi rolls, burgers, fries, pizza, drinks and desserts
 - Eating animation: press **F** or tap **ЕСТЬ**; each portion lifts, tilts and disappears, with a floating feedback label and a simple fullness percentage
+- Interactive street-shop doors swing open and closed with a smooth hinge animation; aim at a nearby door and press **E** or tap the Android interaction button
+- Street neon signs can be switched on/off from nearby; contextual prompts and feedback messages work on desktop and touch screens
 - Procedural furniture, floor tile seams, architectural trim and real-time lighting
 
 ## PBR texture library (4K source maps, Android-conscious)
