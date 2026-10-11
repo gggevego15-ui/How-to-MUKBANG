@@ -7,14 +7,21 @@ const MALL_DEPTH := 86.0
 const WALL_HEIGHT := 10.0
 
 var mats: Dictionary = {}
+var imported_chair_scene: PackedScene
+var imported_burger_scene: PackedScene
+var imported_kiosk_scene: PackedScene
 
 func _ready() -> void:
+	imported_chair_scene = load("res://assets/models/cafe_chair.glb") as PackedScene
+	imported_burger_scene = load("res://assets/models/burger_combo.glb") as PackedScene
+	imported_kiosk_scene = load("res://assets/models/order_kiosk.glb") as PackedScene
 	_make_materials()
 	_build_mall_shell()
 	_build_surface_detail()
 	_build_atrium()
 	_build_food_court()
 	_build_vendor_row()
+	_place_imported_assets()
 	_build_upper_gallery()
 	_build_decor()
 	_build_lighting()
@@ -262,19 +269,28 @@ func _build_food_court() -> void:
 			_build_table_set(Vector3(x, 0, z), seat_colors[(row + col) % seat_colors.size()], row * 10 + col)
 
 func _build_table_set(origin: Vector3, seat_key: String, index: int) -> void:
-	# A cafe-style table with beveled-looking tabletop layers and four separate chairs.
 	_box(self, "DiningTableTop_%02d" % index, origin + Vector3(0, 1.05, 0), Vector3(2.65, 0.12, 1.65), "wood_light")
 	_box(self, "DiningTableEdge_%02d" % index, origin + Vector3(0, 0.98, 0), Vector3(2.72, 0.08, 1.72), "metal", false)
 	_box(self, "TablePedestal_%02d" % index, origin + Vector3(0, 0.5, 0), Vector3(0.22, 0.9, 0.22), "metal")
 	_box(self, "TableFoot_%02d" % index, origin + Vector3(0, 0.08, 0), Vector3(1.05, 0.12, 0.7), "metal")
-	for side in [-1.0, 1.0]:
-		for end in [-1.0, 1.0]:
-			var chair_pos := origin + Vector3(end * 0.92, 0, side * 1.25)
-			_box(self, "ChairSeat_%02d_%s_%s" % [index, str(side), str(end)], chair_pos + Vector3(0, 0.52, 0), Vector3(0.82, 0.16, 0.72), seat_key)
-			for leg_x in [-0.3, 0.3]:
-				for leg_z in [-0.25, 0.25]:
-					_box(self, "ChairLeg_%02d" % index, chair_pos + Vector3(leg_x, 0.25, leg_z), Vector3(0.055, 0.5, 0.055), "metal", false)
-			_box(self, "ChairBack_%02d" % index, chair_pos + Vector3(0, 0.91, side * 0.31), Vector3(0.82, 0.62, 0.12), seat_key)
+	if imported_chair_scene != null:
+		var chair_positions := [
+			[Vector3(-1.02, 0, 0), PI / 2.0],
+			[Vector3(1.02, 0, 0), -PI / 2.0],
+			[Vector3(0, 0, -1.22), 0.0],
+			[Vector3(0, 0, 1.22), PI]
+		]
+		for chair_index in range(chair_positions.size()):
+			var entry: Array = chair_positions[chair_index]
+			var chair := imported_chair_scene.instantiate() as Node3D
+			chair.name = "ImportedCafeChair_%02d_%d" % [index, chair_index]
+			chair.position = origin + entry[0]
+			chair.rotation.y = entry[1]
+			chair.scale = Vector3.ONE * 0.95
+			add_child(chair)
+	else:
+		for side in [-1.0, 1.0]:
+			_box(self, "FallbackBench_%02d_%s" % [index, str(side)], origin + Vector3(0, 0.52, side * 1.25), Vector3(2.1, 0.95, 0.58), seat_key)
 
 func _build_vendor_row() -> void:
 	var sign_keys := ["sign_orange", "sign_pink", "sign_blue", "sign_orange", "sign_pink", "sign_blue", "sign_orange", "sign_pink"]
@@ -298,22 +314,25 @@ func _build_vendor_row() -> void:
 		_box(self, "DisplayGlass_%02d" % i, Vector3(x, 2.05, -35.95), Vector3(8.5, 0.75, 0.045), "glass", false)
 		for post_x in [-4.1, 4.1]:
 			_box(self, "DisplayPost_%02d" % i, Vector3(x + post_x, 2.05, -35.95), Vector3(0.07, 0.85, 0.07), "chrome", false)
-		_make_food_display(i, x, -36.2)
-	# Order kiosks have a sculpted pedestal, bezel, screen and status light.
-	for i in range(6):
-		var x := -17.5 + float(i) * 7.0
-		_box(self, "OrderKioskPedestal_%02d" % i, Vector3(x, 0.52, -32.0), Vector3(0.82, 1.0, 0.72), "metal")
-		_box(self, "OrderKioskBody_%02d" % i, Vector3(x, 1.45, -32.0), Vector3(1.0, 1.15, 0.62), "black")
-		_box(self, "KioskBezel_%02d" % i, Vector3(x, 1.78, -32.34), Vector3(0.83, 0.78, 0.06), "chrome", false)
-		_box(self, "KioskScreen_%02d" % i, Vector3(x, 1.78, -32.30), Vector3(0.72, 0.66, 0.035), "screen", false)
-		_box(self, "KioskUIHeader_%02d" % i, Vector3(x, 2.02, -32.275), Vector3(0.5, 0.035, 0.018), "sign_blue", false)
-		for ui_line in range(3):
-			_box(self, "KioskUILine_%d_%d" % [i, ui_line], Vector3(x, 1.87 - float(ui_line) * 0.12, -32.275), Vector3(0.45 - float(ui_line) * 0.05, 0.025, 0.018), "white", false)
-		_box(self, "KioskStatus_%02d" % i, Vector3(x + 0.32, 1.25, -32.32), Vector3(0.07, 0.07, 0.025), "lettuce", false)
-	_box(self, "PickupCounter", Vector3(0, 0.9, -28.8), Vector3(16, 1.3, 1.2), "wood")
-	_box(self, "PickupCounterTop", Vector3(0, 1.58, -28.8), Vector3(16.3, 0.12, 1.4), "chrome", false)
-	for i in range(4):
-		_box(self, "PickupCubby_%d" % i, Vector3(-5.7 + float(i) * 3.8, 1.05, -28.15), Vector3(3.0, 0.5, 0.06), "black", false)
+		if i != 0:
+			_make_food_display(i, x, -36.2)
+func _place_imported_assets() -> void:
+	# GLB assets use embedded PBR base-colour, roughness and normal maps.
+	if imported_burger_scene != null:
+		var burger := imported_burger_scene.instantiate() as Node3D
+		burger.name = "ImportedBurgerCombo"
+		burger.position = Vector3(-40.0, 1.53, -36.2)
+		burger.scale = Vector3(1.15, 1.15, 1.15)
+		add_child(burger)
+	if imported_kiosk_scene != null:
+		for i in range(6):
+			var x := -17.5 + float(i) * 7.0
+			var kiosk := imported_kiosk_scene.instantiate() as Node3D
+			kiosk.name = "ImportedOrderKiosk_%02d" % i
+			kiosk.position = Vector3(x, 0.0, -32.0)
+			kiosk.scale = Vector3(1.15, 1.15, 1.15)
+			add_child(kiosk)
+
 func _build_upper_gallery() -> void:
 	# Balcony-like gallery ledges and glass rails on both sides.
 	for side in [-1.0, 1.0]:
