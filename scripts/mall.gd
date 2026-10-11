@@ -243,8 +243,8 @@ func _make_food_display(vendor_index: int, x: float, z: float) -> void:
 func _build_mall_shell() -> void:
 	_box(self, "GroundFloor", Vector3(0, -0.25, 0), Vector3(MALL_WIDTH, 0.5, MALL_DEPTH), "floor")
 	_box(self, "NorthOuterWall", Vector3(0, WALL_HEIGHT / 2.0, -MALL_DEPTH / 2.0), Vector3(MALL_WIDTH, WALL_HEIGHT, 0.7), "wall")
-	_box(self, "SouthOuterWallLeft", Vector3(-31, WALL_HEIGHT / 2.0, MALL_DEPTH / 2.0), Vector3(38, WALL_HEIGHT, 0.7), "wall")
-	_box(self, "SouthOuterWallRight", Vector3(31, WALL_HEIGHT / 2.0, MALL_DEPTH / 2.0), Vector3(38, WALL_HEIGHT, 0.7), "wall")
+	_box(self, "SouthOuterWallLeft", Vector3(-36, WALL_HEIGHT / 2.0, MALL_DEPTH / 2.0), Vector3(48, WALL_HEIGHT, 0.7), "wall")
+	_box(self, "SouthOuterWallRight", Vector3(36, WALL_HEIGHT / 2.0, MALL_DEPTH / 2.0), Vector3(48, WALL_HEIGHT, 0.7), "wall")
 	_box(self, "WestOuterWall", Vector3(-MALL_WIDTH / 2.0, WALL_HEIGHT / 2.0, 0), Vector3(0.7, WALL_HEIGHT, MALL_DEPTH), "wall")
 	_box(self, "EastOuterWall", Vector3(MALL_WIDTH / 2.0, WALL_HEIGHT / 2.0, 0), Vector3(0.7, WALL_HEIGHT, MALL_DEPTH), "wall")
 	# Tall open atrium roof, with a bright central skylight.
@@ -371,7 +371,7 @@ func _build_upper_gallery() -> void:
 	# Balcony-like gallery ledges and glass rails on both sides.
 	for side in [-1.0, 1.0]:
 		_box(self, "UpperGallery_%s" % str(side), Vector3(side * 39.0, 5.2, 0), Vector3(12, 0.5, 58), "tile_dark", false)
-		_box(self, "GalleryRail_%s" % str(side), Vector3(side * 43.0, 6.0, 0), Vector3(0.16, 1.2, 58), "glass", false)
+		_box(self, "GalleryRail_%s" % str(side), Vector3(side * 43.0, 6.0, 0), Vector3(0.16, 1.2, 76), "glass", false)
 		for z in range(-24, 29, 8):
 			_box(self, "GalleryShopFront_%s_%d" % [str(side), z], Vector3(side * 58.8, 6.6, float(z)), Vector3(0.4, 2.4, 6.2), "glass", false)
 			_box(self, "GalleryShopSign_%s_%d" % [str(side), z], Vector3(side * 58.4, 8.0, float(z)), Vector3(0.25, 0.6, 4.2), "sign_blue", false)
