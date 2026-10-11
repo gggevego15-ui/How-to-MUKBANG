@@ -29,6 +29,10 @@ func _ready() -> void:
 	_build_lighting()
 	_build_player_camera()
 	_build_main_menu()
+	var world_interactions := Node.new()
+	world_interactions.name = "WorldInteractions"
+	world_interactions.set_script(load("res://scripts/world_interactions.gd"))
+	add_child(world_interactions)
 	var food_ordering := Node.new()
 	food_ordering.name = "FoodOrdering"
 	food_ordering.set_script(load("res://scripts/food_ordering.gd"))
@@ -424,7 +428,10 @@ func _build_street() -> void:
 					if wy < height - 0.5:
 						var window := _box(self, "StreetWindow_%s_%d_%d_%d" % [str(side), z, floor_index, window_index], Vector3(wx, wy, building_z - 11.13 * signf(side)), Vector3(2.6, 1.55, 0.08), "glass", false)
 						window.material_override = mats["glass"]
-			_box(self, "NeonSign_%s_%d" % [str(side), z], Vector3(side * 28.85, 3.0, building_z - 6.0), Vector3(0.12, 1.0, 5.2), "neon_cyan" if z % 2 == 0 else "neon_pink", false)
+			var neon_sign := _box(self, "NeonSign_%s_%d" % [str(side), z], Vector3(side * 28.85, 3.0, building_z - 6.0), Vector3(0.12, 1.0, 5.2), "neon_cyan" if z % 2 == 0 else "neon_pink", false)
+			neon_sign.add_to_group("world_interactable")
+			neon_sign.set_meta("interaction_type", "sign")
+			neon_sign.set_meta("interaction_label", "Включить / выключить неон")
 	# Pools of light on wet pavement; poles alternate sides along the street.
 	for side in [-1.0, 1.0]:
 		for z in range(66, 211, 24):
@@ -468,7 +475,31 @@ func _build_street_shop(side: float, building_z: float, building_id: int, buildi
 			_box(self, "ShopWindowFrame_%d_%d" % [building_id, section], Vector3(front_x - side * 0.08, 2.0, section_z), Vector3(0.12, 3.55, 5.95), "metal", false)
 	# Recessed door and glowing sign above the entrance.
 	_box(self, "ShopDoorFrame_%d" % building_id, Vector3(front_x, 1.55, building_z), Vector3(0.16, 3.05, 2.0), "chrome", false)
-	_box(self, "ShopDoorGlass_%d" % building_id, Vector3(front_x - side * 0.04, 1.55, building_z), Vector3(0.08, 2.8, 1.72), "glass", false)
+	# Hinged glass door: its pivot is offset to one side so it swings clear of the entrance.
+	var door_hinge := Node3D.new()
+	door_hinge.name = "InteractiveShopDoor_%d" % building_id
+	door_hinge.position = Vector3(front_x - side * 0.08, 0.15, building_z - 0.86)
+	door_hinge.add_to_group("world_interactable")
+	door_hinge.set_meta("interaction_type", "door")
+	door_hinge.set_meta("interaction_label", "Открыть / закрыть дверь")
+	add_child(door_hinge)
+	var door_mesh := MeshInstance3D.new()
+	door_mesh.name = "DoorGlass"
+	var door_box := BoxMesh.new()
+	door_box.size = Vector3(0.08, 2.8, 1.72)
+	door_mesh.mesh = door_box
+	door_mesh.position = Vector3(0.0, 1.4, 0.86)
+	door_mesh.material_override = mats["glass"]
+	door_hinge.add_child(door_mesh)
+	var door_body := StaticBody3D.new()
+	door_body.name = "DoorCollision"
+	var door_shape_node := CollisionShape3D.new()
+	var door_shape := BoxShape3D.new()
+	door_shape.size = Vector3(0.08, 2.8, 1.72)
+	door_shape_node.shape = door_shape
+	door_shape_node.position = Vector3(0.0, 1.4, 0.86)
+	door_body.add_child(door_shape_node)
+	door_hinge.add_child(door_body)
 	_box(self, "ShopSign_%d" % building_id, Vector3(front_x - side * 0.18, 4.05, building_z), Vector3(0.18, 0.65, 7.8), "neon_pink" if building_id % 2 == 0 else "neon_cyan", false)
 	# Counters, stocked display shelves and small display plinths inside each shop.
 	for shelf in range(3):
