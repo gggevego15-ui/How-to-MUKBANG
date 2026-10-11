@@ -97,7 +97,7 @@ func _set_light_budget(count: int) -> void:
 		light.visible = i < count
 		light.shadow_enabled = false
 	for light in _directional_lights:
-		light.shadow_enabled = profile_index > 0
+		light.shadow_enabled = profile_index == 2
 
 func _set_rain(amount: int) -> void:
 	if _rain == null:
