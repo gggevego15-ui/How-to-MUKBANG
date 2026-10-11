@@ -70,7 +70,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$HOME/.config/godot" "$HOME/.android"
-          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          cat > "$HOME/.config/godot/editor_settings-4.4.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
           [resource]
           export/android/android_sdk_path = "$ANDROID_HOME"
@@ -141,7 +141,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          settings="$HOME/.config/godot/editor_settings-4.tres"
+          settings="$HOME/.config/godot/editor_settings-4.4.tres"
           echo "Editor settings file:"
           cat "$settings"
           test -d "$ANDROID_HOME"
