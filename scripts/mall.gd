@@ -423,6 +423,11 @@ func _build_table_set(origin: Vector3, seat_key: String, index: int) -> void:
 			chair.position = origin + entry[0]
 			chair.rotation.y = entry[1]
 			chair.scale = Vector3.ONE * 0.95
+			chair.add_to_group("world_interactable")
+			chair.set_meta("interaction_type", "seat")
+			chair.set_meta("interaction_label", "Сесть за стол")
+			chair.set_meta("seat_table_position", origin + Vector3(0, 1.05, 0))
+			chair.set_meta("seat_table_origin", origin)
 			add_child(chair)
 	else:
 		for side in [-1.0, 1.0]:
