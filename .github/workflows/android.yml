@@ -101,7 +101,7 @@ jobs:
           mkdir -p build
 
       - name: Validate project and import assets
-        run: godot --headless --editor --path . --quit
+        run: godot --headless --editor --path . --import --quit
 
       - name: Validate 2K PBR texture imports
         run: godot --headless --path . --script res://scripts/validate_pbr.gd
