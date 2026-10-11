@@ -33,7 +33,7 @@ The 16 `.import` sidecars under `assets/textures/pbr/` enable mipmap generation 
 
 ## Mobile controls
 
-On Android/iOS, a virtual joystick appears in the lower-left corner: drag it to walk and strafe. Drag anywhere on the right side of the screen to look around; vertical swipes tilt the camera. Touch controls are generated at runtime and are hidden on desktop, where WASD and mouse controls remain active.
+On Android/iOS, a virtual joystick appears in the lower-left corner: drag it to walk and strafe. The **JUMP** button at the lower-right makes the player jump, and hold **RUN** to sprint. Drag on the right side of the screen outside the action buttons to look around; vertical swipes tilt the camera. Touch controls are generated at runtime and are hidden on desktop, where WASD, Space, Shift and mouse controls remain active.
 
 
 - **WASD** — walk around the food court
