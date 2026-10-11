@@ -51,12 +51,9 @@ func _ready() -> void:
 	_food_service.set_script(load("res://scripts/food_service.gd"))
 	add_child(_food_service)
 	_build_ui()
+	get_viewport().size_changed.connect(_layout_order_ui)
 	_food_service.delivery_started.connect(_on_delivery_started)
 	_food_service.delivery_completed.connect(_on_delivery_completed)
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_RESIZED:
-		call_deferred("_layout_order_ui")
 
 func _layout_order_ui() -> void:
 	if _panel == null or _columns == null:
