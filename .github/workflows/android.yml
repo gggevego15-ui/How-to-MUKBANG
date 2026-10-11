@@ -51,7 +51,7 @@ jobs:
 
       - name: Install Android platform packages
         shell: bash
-        run: /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "ndk;28.1.13356709" "cmake;3.10.2.4988404"
+        run: /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0" "ndk;23.2.8568313" "cmake;3.10.2.4988404"
 
       - name: Install Godot and export templates
         shell: bash
@@ -99,8 +99,10 @@ jobs:
           [preset.0.options]
           custom_template/debug=""
           custom_template/release=""
-          gradle_build/use_gradle_build=false
+          gradle_build/use_gradle_build=true
           gradle_build/export_format=0
+          gradle_build/min_sdk=24
+          gradle_build/target_sdk=35
           architectures/armeabi-v7a=false
           architectures/arm64-v8a=true
           architectures/x86=false
@@ -159,7 +161,7 @@ jobs:
             godot --headless --editor --path . --import --quit-after 5
 
       - name: Install project Android build template
-        if: false # Gradle export is disabled; Godot exports directly with its Android templates.
+        if: true # Gradle export requires the project Android build template.
         timeout-minutes: 3
         shell: bash
         run: |
