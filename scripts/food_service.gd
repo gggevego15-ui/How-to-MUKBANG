@@ -130,7 +130,8 @@ func serve(ordered_items: Array, products: Array, player: CharacterBody3D) -> vo
 
 func _nearest_table() -> Vector3:
 	if _player != null and _player.has_meta("seated_table_position"):
-		return _player.get_meta("seated_table_position") as Vector3
+		var seated_table: Vector3 = _player.get_meta("seated_table_position")
+		return seated_table
 	var best := Vector3(0, 0, -38)
 	var best_distance := INF
 	for row in range(6):
