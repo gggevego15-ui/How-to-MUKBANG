@@ -1,8 +1,13 @@
 extends Node
-## Spawns the purchased order on a nearby dining table and animates each bite.
+## Delivers each order to the selected table with a procedural waiter.
+
+signal delivery_started
+signal delivery_completed
+
 
 var _player: CharacterBody3D
 var _tray: Node3D
+var _waiter: Node3D
 var _servings: Array[Node3D] = []
 var _eat_button: Button
 var _hint: Label
@@ -83,11 +88,20 @@ func serve(ordered_items: Array, products: Array, player: CharacterBody3D) -> vo
 	if _tray != null and is_instance_valid(_tray):
 		_tray.queue_free()
 	_servings.clear()
+	var world := get_parent().get_parent()
+	var table_origin := _nearest_table()
+	var start_position := Vector3(clampf(table_origin.x, -40.0, 39.8), 0.0, -35.0)
+	_waiter = _build_waiter()
+	_waiter.name = "OrderDeliveryWaiter"
+	world.add_child(_waiter)
+	_waiter.global_position = start_position
+	_waiter.rotation.y = atan2(-(table_origin.x - start_position.x), -(table_origin.z - start_position.z))
 	_tray = Node3D.new()
-	_tray.name = "FreshlyServedFood"
-	get_parent().get_parent().add_child(_tray)
-	_tray.global_position = _nearest_table() + Vector3(0, 1.18, 0)
-	_tray.rotation.y = _player.global_rotation.y
+	_tray.name = "WaiterServingTray"
+	_waiter.add_child(_tray)
+	_tray.position = Vector3(0, 1.18, -0.38)
+	_tray.rotation = Vector3.ZERO
+	emit_signal("delivery_started")
 	var plate := MeshInstance3D.new()
 	var plate_mesh := CylinderMesh.new()
 	plate_mesh.top_radius = 1.0
@@ -125,8 +139,71 @@ func serve(ordered_items: Array, products: Array, player: CharacterBody3D) -> vo
 		if n >= 8:
 			break
 	_tray.scale = Vector3.ONE * 0.82
+	var travel_distance := Vector2(table_origin.x - start_position.x, table_origin.z - start_position.z).length()
+	var travel_time := clampf(travel_distance / 2.6, 1.8, 6.0)
+	var walk := create_tween()
+	walk.set_trans(Tween.TRANS_CUBIC)
+	walk.set_ease(Tween.EASE_IN_OUT)
+	walk.tween_property(_waiter, "global_position", Vector3(table_origin.x, 0.0, table_origin.z + 0.45), travel_time)
+	var sway := create_tween()
+	sway.set_loops(maxi(1, int(ceil(travel_time / 0.32))))
+	sway.tween_property(_waiter, "rotation:z", deg_to_rad(3.0), 0.16)
+	sway.tween_property(_waiter, "rotation:z", deg_to_rad(-3.0), 0.16)
+	await walk.finished
+	if not is_inside_tree() or not is_instance_valid(_tray) or not is_instance_valid(_waiter):
+		return
+	if sway.is_running():
+		sway.kill()
+	_waiter.rotation.z = 0.0
+	_tray.reparent(world, true)
+	_tray.global_position = table_origin + Vector3(0, 1.18, 0)
+	_tray.rotation.y = _player.global_rotation.y
 	var tray_tween := create_tween()
-	tray_tween.tween_property(_tray, "scale", Vector3.ONE, 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tray_tween.set_parallel(true)
+	tray_tween.tween_property(_tray, "scale", Vector3.ONE, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tray_tween.tween_property(_tray, "position:y", 1.18, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var waiter_fade := create_tween()
+	waiter_fade.tween_property(_waiter, "scale", Vector3.ONE * 0.85, 0.22)
+	waiter_fade.tween_property(_waiter, "scale", Vector3.ZERO, 0.3)
+	waiter_fade.tween_callback(_waiter.queue_free)
+	emit_signal("delivery_completed")
+
+func _build_waiter() -> Node3D:
+	var waiter := Node3D.new()
+	waiter.name = "ProceduralWaiter"
+	var uniform := _mat(Color("24364f"), 0.68)
+	var apron := _mat(Color("e7eaf0"), 0.72)
+	var skin := _mat(Color("c88e68"), 0.78)
+	var hair := _mat(Color("30251f"), 0.9)
+	_piece(waiter, CapsuleMesh.new(), Vector3(0, 0.91, 0), Vector3(0.34, 0.48, 0.28), Color("24364f"), "WaiterUniform")
+	_piece(waiter, BoxMesh.new(), Vector3(0, 0.88, -0.155), Vector3(0.27, 0.38, 0.035), Color("e7eaf0"), "WaiterApron")
+	_piece(waiter, SphereMesh.new(), Vector3(0, 1.52, 0), Vector3(0.22, 0.25, 0.22), Color("c88e68"), "WaiterHead")
+	_piece(waiter, SphereMesh.new(), Vector3(0, 1.66, 0.015), Vector3(0.225, 0.13, 0.23), Color("30251f"), "WaiterHair")
+	_piece(waiter, BoxMesh.new(), Vector3(0, 1.79, 0), Vector3(0.34, 0.09, 0.32), Color("f3f5f8"), "WaiterCap")
+	var left_leg := Node3D.new()
+	left_leg.position = Vector3(-0.105, 0.58, 0)
+	waiter.add_child(left_leg)
+	_piece(left_leg, CapsuleMesh.new(), Vector3(0, -0.25, 0), Vector3(0.11, 0.29, 0.12), Color("172333"), "LeftLeg")
+	var right_leg := Node3D.new()
+	right_leg.position = Vector3(0.105, 0.58, 0)
+	waiter.add_child(right_leg)
+	_piece(right_leg, CapsuleMesh.new(), Vector3(0, -0.25, 0), Vector3(0.11, 0.29, 0.12), Color("172333"), "RightLeg")
+	var left_arm := Node3D.new()
+	left_arm.position = Vector3(-0.23, 1.13, -0.01)
+	waiter.add_child(left_arm)
+	_piece(left_arm, CapsuleMesh.new(), Vector3(0, -0.22, -0.02), Vector3(0.085, 0.25, 0.09), Color("24364f"), "LeftArm")
+	var right_arm := Node3D.new()
+	right_arm.position = Vector3(0.23, 1.13, -0.01)
+	waiter.add_child(right_arm)
+	_piece(right_arm, CapsuleMesh.new(), Vector3(0, -0.22, -0.02), Vector3(0.085, 0.25, 0.09), Color("24364f"), "RightArm")
+	var arms := create_tween()
+	arms.set_loops()
+	arms.tween_property(left_arm, "rotation:x", -0.42, 0.18)
+	arms.parallel().tween_property(right_arm, "rotation:x", 0.42, 0.18)
+	arms.tween_property(left_arm, "rotation:x", 0.42, 0.18)
+	arms.parallel().tween_property(right_arm, "rotation:x", -0.42, 0.18)
+	waiter.set_meta("walking_tween", arms)
+	return waiter
 
 func _nearest_table() -> Vector3:
 	if _player != null and _player.has_meta("seated_table_position"):
