@@ -48,18 +48,21 @@ func _ready() -> void:
 
 	var outfit := StandardMaterial3D.new()
 	outfit.albedo_color = outfit_color
-	outfit.roughness = 0.72
+	outfit.roughness = 0.84
 	outfit.metallic = 0.0
 	var skin := StandardMaterial3D.new()
 	skin.albedo_color = skin_color
-	skin.roughness = 0.74
+	skin.roughness = 0.86
+	skin.metallic = 0.0
 	var shoes := StandardMaterial3D.new()
 	shoes.albedo_color = Color("202634")
 	shoes.roughness = 0.68
 	var hair_material := StandardMaterial3D.new()
-	var hair_colors := [Color("241a17"), Color("493126"), Color("171b22"), Color("76543b")]
+	var hair_colors := [Color("241a17"), Color("493126"), Color("171b22"), Color("76543b"), Color("b58a5a"), Color("29202b")]
 	hair_material.albedo_color = hair_colors[posmod(get_instance_id(), hair_colors.size())]
-	hair_material.roughness = 0.82
+	hair_material.roughness = 0.9
+	var skin_tones := [Color("f0c6a5"), Color("d7a17e"), Color("b97d5b"), Color("87583f"), Color("e5b28d")]
+	skin.albedo_color = skin_tones[posmod(get_instance_id() >> 3, skin_tones.size())]
 	var eye_material := StandardMaterial3D.new()
 	eye_material.albedo_color = Color("171b22")
 	eye_material.roughness = 0.28
@@ -155,8 +158,8 @@ func _capsule_part(label: String, radius: float, height: float, part_position: V
 	var mesh := CapsuleMesh.new()
 	mesh.radius = radius
 	mesh.height = height
-	mesh.radial_segments = 8
-	mesh.rings = 3
+	mesh.radial_segments = 10
+	mesh.rings = 4
 	part.mesh = mesh
 	part.position = part_position
 	part.material_override = material
