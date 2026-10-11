@@ -2,7 +2,7 @@ extends SceneTree
 
 const FAMILIES := ["food", "wood", "ceramic", "metal"]
 const MAPS := ["basecolor", "roughness", "normal", "metallic"]
-const EXPECTED_SIZE := 2048
+const EXPECTED_SIZE := 4096
 
 func _initialize() -> void:
 	call_deferred("_validate_textures")
@@ -12,7 +12,7 @@ func _validate_textures() -> void:
 	var imported_count := 0
 	for family in FAMILIES:
 		for map_name in MAPS:
-			var path := "res://assets/textures/pbr/%s_%s_2k.svg" % [family, map_name]
+			var path := "res://assets/textures/pbr/%s_%s_4k.svg" % [family, map_name]
 			var texture := load(path) as Texture2D
 			if texture == null:
 				errors.append("Could not import texture: " + path)
@@ -37,5 +37,5 @@ func _validate_textures() -> void:
 			push_error(error_text)
 		quit(1)
 		return
-	print("PBR validation passed: %d imported 2K textures; mipmaps and VRAM compression enabled." % imported_count)
+	print("PBR validation passed: %d imported 4K textures; mipmaps and VRAM compression enabled." % imported_count)
 	quit(0)
