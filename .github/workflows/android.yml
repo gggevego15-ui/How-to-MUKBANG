@@ -103,6 +103,9 @@ jobs:
       - name: Validate project and import assets
         run: godot --headless --editor --path . --quit
 
+      - name: Validate 2K PBR texture imports
+        run: godot --headless --path . --script res://scripts/validate_pbr.gd
+
       - name: Export Android APK
         run: godot --headless --path . --export-debug "Android" build/How-to-MUKBANG.apk
 
