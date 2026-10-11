@@ -25,5 +25,9 @@ Imported GLB props remain at:
 - `assets/models/cafe_chair.glb`
 - `assets/models/order_kiosk.glb`
 
+## Android PBR import settings
+
+The 16 `.import` sidecars under `assets/textures/pbr/` enable mipmap generation and VRAM compression (`compress/mode=2`). Normal maps use the normal-map compression flag. Project rendering settings enable Android ETC2/ASTC texture import and moderate 4× anisotropic filtering. `scripts/validate_pbr.gd` checks that all 16 textures load at 2048×2048 and that their import settings keep mipmaps and compression enabled.
+
 ## Android build
 Open **Actions → Build How to MUKBANG Android**, wait for the workflow to finish, then download the **How-to-MUKBANG-Android** artifact. The workflow imports assets with Godot before exporting the APK.
