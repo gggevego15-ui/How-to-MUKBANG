@@ -3,7 +3,9 @@
 A mobile 3D mukbang game prototype made with Godot 4.
 
 ## Current milestone: shopping mall food court
-- Large shopping mall shell with central atrium, skylight and upper gallery
+- Expanded 120 × 110 m shopping mall shell with central atrium, skylight and upper gallery
+- Walkable neon-lit street outside the entrance, with sidewalks, storefronts, street lamps, trees and reflective puddles
+- Rainy night weather with dense exterior rain, cool night ambience and warm/cyan street lighting
 - Imported glTF Binary (GLB) assets for a layered burger combo, cafe chair and self-service order kiosk
 - GLB assets contain PBR base-colour, metallic/roughness and normal texture channels
 - Separate 128×128 PNG texture maps are available under `assets/textures/`
@@ -27,7 +29,7 @@ Imported GLB props remain at:
 
 ## Android PBR import settings
 
-The 16 `.import` sidecars under `assets/textures/pbr/` enable mipmap generation and VRAM compression (`compress/mode=2`). Normal maps use the normal-map compression flag. Project rendering settings enable Android ETC2/ASTC texture import and moderate 4× anisotropic filtering. `scripts/validate_pbr.gd` checks that all 16 textures load at 2048×2048 and that their import settings keep mipmaps and compression enabled.
+The 16 `.import` sidecars under `assets/textures/pbr/` enable mipmap generation and VRAM compression (`compress/mode=2`). Normal maps use the normal-map compression flag. Project rendering settings enable Android ETC2/ASTC texture import and moderate 4× anisotropic filtering. `scripts/validate_pbr.gd` checks that all 16 textures load at 4096×4096 and that their import settings keep mipmaps and compression enabled.
 
 ## First-person controls
 
