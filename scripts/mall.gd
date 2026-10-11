@@ -423,7 +423,7 @@ func _build_street() -> void:
 			_build_street_shop(side, building_z, z, height)
 			for floor_index in range(1, 4):
 				for window_index in range(4):
-					var wx := side * 39.0 + (float(window_index) - 1.5) * 4.2
+					var wx: float = float(side) * 39.0 + (float(window_index) - 1.5) * 4.2
 					var wy := float(floor_index) * 2.4 + 1.0
 					if wy < height - 0.5:
 						var window := _box(self, "StreetWindow_%s_%d_%d_%d" % [str(side), z, floor_index, window_index], Vector3(wx, wy, building_z - 11.13 * signf(side)), Vector3(2.6, 1.55, 0.08), "glass", false)
