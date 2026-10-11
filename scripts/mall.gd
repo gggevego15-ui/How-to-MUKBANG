@@ -2,8 +2,8 @@ extends Node3D
 ## Procedural first milestone map for How to MUKBANG.
 ## Coordinates are in metres. The central atrium connects four food-court wings.
 
-const MALL_WIDTH := 100.0
-const MALL_DEPTH := 86.0
+const MALL_WIDTH := 120.0
+const MALL_DEPTH := 110.0
 const WALL_HEIGHT := 10.0
 
 var mats: Dictionary = {}
@@ -24,6 +24,8 @@ func _ready() -> void:
 	_place_imported_assets()
 	_build_upper_gallery()
 	_build_decor()
+	_build_street()
+	_build_rain()
 	_build_lighting()
 	_build_player_camera()
 	_build_main_menu()
@@ -84,6 +86,12 @@ func _make_materials() -> void:
 	_material("sign_pink", Color("ff5ca8"), 0.28, 0.1)
 	_material("sign_blue", Color("55b9ff"), 0.28, 0.1)
 	_material("black", Color("202631"), 0.32)
+	_material("asphalt", Color("151c27"), 0.16, 0.22)
+	_material("road_line", Color("d9e6ee"), 0.32)
+	_material("puddle", Color(0.10, 0.20, 0.29, 0.82), 0.06, 0.35)
+	_material("brick", Color("343b49"), 0.82)
+	_material("neon_cyan", Color("38d9ff"), 0.2, 0.1)
+	_material("neon_pink", Color("ff4fa3"), 0.2, 0.1)
 	_material("plant", Color("42734b"), 0.9)
 	_material("soil", Color("574638"), 0.9)
 	_material("white", Color("f4f3ed"), 0.4)
@@ -242,32 +250,32 @@ func _build_mall_shell() -> void:
 	# Tall open atrium roof, with a bright central skylight.
 	_box(self, "Roof", Vector3(0, 10.4, 0), Vector3(MALL_WIDTH, 0.5, MALL_DEPTH), "concrete", false)
 	_box(self, "SkylightGlass", Vector3(0, 10.1, 0), Vector3(34, 0.12, 28), "glass", false)
-	for x in [-46.0, -24.0, 24.0, 46.0]:
-		for z in [-38.0, 0.0, 38.0]:
+	for x in [-56.0, -28.0, 28.0, 56.0]:
+		for z in [-48.0, 0.0, 48.0]:
 			_box(self, "StructuralPillar_%s_%s" % [str(x), str(z)], Vector3(x, 4.8, z), Vector3(1.0, 9.6, 1.0), "concrete")
 
 
 func _build_surface_detail() -> void:
 	# Fine porcelain tile seams, realistic architectural trim and ceiling rails.
-	for x in range(-48, 49, 4):
+	for x in range(-58, 59, 4):
 		_box(self, "FloorGroutX_%d" % x, Vector3(float(x), 0.012, 0), Vector3(0.018, 0.012, MALL_DEPTH - 2.0), "concrete", false)
-	for z in range(-41, 42, 4):
+	for z in range(-53, 54, 4):
 		_box(self, "FloorGroutZ_%d" % z, Vector3(0, 0.013, float(z)), Vector3(MALL_WIDTH - 2.0, 0.012, 0.018), "concrete", false)
-	for x in range(-40, 41, 8):
+	for x in range(-48, 49, 8):
 		_box(self, "CeilingBeamX_%d" % x, Vector3(float(x), 9.65, 0), Vector3(0.22, 0.28, MALL_DEPTH - 4.0), "metal", false)
-	for z in range(-32, 33, 8):
+	for z in range(-48, 49, 8):
 		_box(self, "CeilingBeamZ_%d" % z, Vector3(0, 9.65, float(z)), Vector3(MALL_WIDTH - 4.0, 0.28, 0.22), "metal", false)
 	# Brushed-metal trims break up large flat wall surfaces.
 	for y in [0.35, 3.2, 6.2, 9.1]:
-		_box(self, "NorthWallTrim_%s" % str(y), Vector3(0, y, -42.9), Vector3(MALL_WIDTH - 1.5, 0.09, 0.12), "metal", false)
-		_box(self, "WestWallTrim_%s" % str(y), Vector3(-49.55, y, 0), Vector3(0.12, 0.09, MALL_DEPTH - 1.5), "metal", false)
-		_box(self, "EastWallTrim_%s" % str(y), Vector3(49.55, y, 0), Vector3(0.12, 0.09, MALL_DEPTH - 1.5), "metal", false)
+		_box(self, "NorthWallTrim_%s" % str(y), Vector3(0, y, -54.3), Vector3(MALL_WIDTH - 1.5, 0.09, 0.12), "metal", false)
+		_box(self, "WestWallTrim_%s" % str(y), Vector3(-59.55, y, 0), Vector3(0.12, 0.09, MALL_DEPTH - 1.5), "metal", false)
+		_box(self, "EastWallTrim_%s" % str(y), Vector3(59.55, y, 0), Vector3(0.12, 0.09, MALL_DEPTH - 1.5), "metal", false)
 	# Vertical mullions give the upper shopfront glazing believable scale.
 	for side in [-1.0, 1.0]:
 		for z in range(-27, 29, 4):
-			_box(self, "ShopfrontMullion_%s_%d" % [str(side), z], Vector3(side * 48.55, 6.6, float(z)), Vector3(0.16, 2.5, 0.12), "metal", false)
+			_box(self, "ShopfrontMullion_%s_%d" % [str(side), z], Vector3(side * 58.55, 6.6, float(z)), Vector3(0.16, 2.5, 0.12), "metal", false)
 		for z in [-28.0, -14.0, 14.0, 28.0]:
-			_box(self, "GalleryDownlight_%s_%s" % [str(side), str(z)], Vector3(side * 39.0, 5.0, z), Vector3(2.0, 0.06, 0.35), "white", false)
+			_box(self, "GalleryDownlight_%s_%s" % [str(side), str(z)], Vector3(side * 49.0, 5.0, z), Vector3(2.0, 0.06, 0.35), "white", false)
 
 func _build_atrium() -> void:
 	# Wide central promenade, patterned floor inlays, and decorative planters.
@@ -286,10 +294,10 @@ func _build_atrium() -> void:
 func _build_food_court() -> void:
 	# Dining island tables in four broad zones. Aisles remain open between them.
 	var seat_colors := ["seat_red", "seat_blue", "seat_green"]
-	for row in range(5):
-		for col in range(6):
-			var x := -39.0 + float(col) * 15.5
-			var z := -30.0 + float(row) * 14.0
+	for row in range(6):
+		for col in range(7):
+			var x := -48.0 + float(col) * 16.0
+			var z := -38.0 + float(row) * 15.0
 			if absf(x) < 18.0 and absf(z) < 22.0:
 				continue
 			_build_table_set(Vector3(x, 0, z), seat_colors[(row + col) % seat_colors.size()], row * 10 + col)
@@ -363,10 +371,10 @@ func _build_upper_gallery() -> void:
 	# Balcony-like gallery ledges and glass rails on both sides.
 	for side in [-1.0, 1.0]:
 		_box(self, "UpperGallery_%s" % str(side), Vector3(side * 39.0, 5.2, 0), Vector3(12, 0.5, 58), "tile_dark", false)
-		_box(self, "GalleryRail_%s" % str(side), Vector3(side * 33.0, 6.0, 0), Vector3(0.16, 1.2, 58), "glass", false)
+		_box(self, "GalleryRail_%s" % str(side), Vector3(side * 43.0, 6.0, 0), Vector3(0.16, 1.2, 58), "glass", false)
 		for z in range(-24, 29, 8):
-			_box(self, "GalleryShopFront_%s_%d" % [str(side), z], Vector3(side * 48.8, 6.6, float(z)), Vector3(0.4, 2.4, 6.2), "glass", false)
-			_box(self, "GalleryShopSign_%s_%d" % [str(side), z], Vector3(side * 48.4, 8.0, float(z)), Vector3(0.25, 0.6, 4.2), "sign_blue", false)
+			_box(self, "GalleryShopFront_%s_%d" % [str(side), z], Vector3(side * 58.8, 6.6, float(z)), Vector3(0.4, 2.4, 6.2), "glass", false)
+			_box(self, "GalleryShopSign_%s_%d" % [str(side), z], Vector3(side * 58.4, 8.0, float(z)), Vector3(0.25, 0.6, 4.2), "sign_blue", false)
 
 func _build_decor() -> void:
 	# Ceiling light panels in a repeating architectural grid.
@@ -380,21 +388,100 @@ func _build_decor() -> void:
 			_box(self, "AtriumBenchBase", Vector3(x, 0.25, z), Vector3(2.8, 0.35, 0.55), "metal")
 	# Entry doors and glass panels.
 	for x in [-12.0, -6.0, 6.0, 12.0]:
-		_box(self, "EntranceGlassPanel_%s" % str(x), Vector3(x, 2.0, 42.6), Vector3(5.5, 4.0, 0.12), "glass", false)
-	_box(self, "EntranceCanopy", Vector3(0, 4.7, 43.5), Vector3(30, 0.35, 4.0), "metal", false)
-	_box(self, "EntranceSign", Vector3(0, 5.4, 43.3), Vector3(18, 0.8, 0.2), "sign_orange", false)
+		_box(self, "EntranceGlassPanel_%s" % str(x), Vector3(x, 2.0, 54.6), Vector3(5.5, 4.0, 0.12), "glass", false)
+	_box(self, "EntranceCanopy", Vector3(0, 4.7, 55.5), Vector3(30, 0.35, 4.0), "metal", false)
+	_box(self, "EntranceSign", Vector3(0, 5.4, 55.3), Vector3(18, 0.8, 0.2), "sign_orange", false)
+
+
+func _build_street() -> void:
+	# Walkable rainy-night street beyond the mall's glass entrance.
+	_box(self, "StreetAsphalt", Vector3(0, -0.12, 139.0), Vector3(44.0, 0.22, 166.0), "asphalt")
+	_box(self, "WestSidewalk", Vector3(-25.0, -0.02, 139.0), Vector3(6.0, 0.32, 166.0), "concrete")
+	_box(self, "EastSidewalk", Vector3(25.0, -0.02, 139.0), Vector3(6.0, 0.32, 166.0), "concrete")
+	_box(self, "WestCurb", Vector3(-21.8, 0.10, 139.0), Vector3(0.28, 0.42, 166.0), "tile_dark")
+	_box(self, "EastCurb", Vector3(21.8, 0.10, 139.0), Vector3(0.28, 0.42, 166.0), "tile_dark")
+	for z in range(61, 211, 10):
+		_box(self, "LaneDash_%d" % z, Vector3(0, 0.005, float(z)), Vector3(0.16, 0.018, 4.2), "road_line", false)
+	for side in [-1.0, 1.0]:
+		for z in range(72, 211, 28):
+			var building_z := float(z)
+			var height := 9.0 + float((z / 7) % 3) * 2.0
+			_box(self, "StreetBuilding_%s_%d" % [str(side), z], Vector3(side * 39.0, height * 0.5, building_z), Vector3(20.0, height, 22.0), "brick")
+			_box(self, "BuildingRoofTrim_%s_%d" % [str(side), z], Vector3(side * 39.0, height, building_z), Vector3(20.3, 0.28, 22.3), "metal", false)
+			for floor_index in range(1, 4):
+				for window_index in range(4):
+					var wx := side * 39.0 + (float(window_index) - 1.5) * 4.2
+					var wy := float(floor_index) * 2.4 + 1.0
+					if wy < height - 0.5:
+						var window := _box(self, "StreetWindow_%s_%d_%d_%d" % [str(side), z, floor_index, window_index], Vector3(wx, wy, building_z - 11.13 * signf(side)), Vector3(2.6, 1.55, 0.08), "glass", false)
+						window.material_override = mats["glass"]
+			_box(self, "NeonSign_%s_%d" % [str(side), z], Vector3(side * 28.85, 3.0, building_z - 6.0), Vector3(0.12, 1.0, 5.2), "neon_cyan" if z % 2 == 0 else "neon_pink", false)
+	# Pools of light on wet pavement; poles alternate sides along the street.
+	for side in [-1.0, 1.0]:
+		for z in range(66, 211, 24):
+			_box(self, "StreetLampPole_%s_%d" % [str(side), z], Vector3(side * 18.2, 4.0, float(z)), Vector3(0.16, 8.0, 0.16), "metal")
+			_box(self, "StreetLampArm_%s_%d" % [str(side), z], Vector3(side * 17.3, 7.7, float(z)), Vector3(1.8, 0.12, 0.12), "metal", false)
+			_box(self, "StreetLampHead_%s_%d" % [str(side), z], Vector3(side * 16.5, 7.55, float(z)), Vector3(0.9, 0.16, 0.38), "white", false)
+			var lamp := OmniLight3D.new()
+			lamp.name = "StreetLampGlow_%s_%d" % [str(side), z]
+			lamp.position = Vector3(side * 16.5, 7.1, float(z))
+			lamp.light_color = Color("91cfff") if z % 48 == 0 else Color("ffd4a0")
+			lamp.light_energy = 1.8
+			lamp.omni_range = 18.0
+			lamp.shadow_enabled = false
+			add_child(lamp)
+	# Thin glossy puddles create broken neon reflections across the asphalt.
+	for i in range(34):
+		var px := sin(float(i) * 12.73) * 18.0
+		var pz := 62.0 + float(i) * 4.25
+		var puddle := _box(self, "RoadPuddle_%02d" % i, Vector3(px, 0.008, pz), Vector3(1.2 + float(i % 4) * 0.8, 0.018, 0.55 + float(i % 3) * 0.3), "puddle", false)
+		puddle.rotation.y = float(i) * 0.71
+	# Sidewalk props make the street feel like a place to wander, not a road corridor.
+	for side in [-1.0, 1.0]:
+		for z in range(78, 207, 36):
+			_cylinder(self, "StreetTreeTrunk_%s_%d" % [str(side), z], Vector3(side * 26.0, 1.5, float(z)), 0.22, 3.0, "wood", false)
+			_sphere(self, "StreetTreeCanopy_%s_%d" % [str(side), z], Vector3(side * 26.0, 4.0, float(z)), Vector3(2.5, 3.0, 2.5), "plant")
+
+func _build_rain() -> void:
+	# Dense rain is confined to the exterior street area, with visible streaks and wet ground.
+	var rain := CPUParticles3D.new()
+	rain.name = "NightRain"
+	rain.position = Vector3(0, 18.0, 139.0)
+	rain.amount = 1800
+	rain.lifetime = 1.8
+	rain.preprocess = 1.8
+	rain.emitting = true
+	rain.direction = Vector3(-0.12, -1.0, 0.0)
+	rain.spread = 7.0
+	rain.gravity = Vector3(0.0, -18.0, 0.0)
+	rain.initial_velocity_min = 13.0
+	rain.initial_velocity_max = 19.0
+	rain.scale_amount_min = 0.55
+	rain.scale_amount_max = 1.25
+	rain.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	rain.emission_box_extents = Vector3(22.0, 1.0, 78.0)
+	var drop_mesh := BoxMesh.new()
+	drop_mesh.size = Vector3(0.018, 0.42, 0.018)
+	rain.mesh = drop_mesh
+	var drop_material := StandardMaterial3D.new()
+	drop_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	drop_material.albedo_color = Color(0.48, 0.72, 1.0, 0.7)
+	drop_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	drop_material.roughness = 0.25
+	rain.material_override = drop_material
+	add_child(rain)
 
 func _build_lighting() -> void:
 	var world := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("202a39")
+	env.background_color = Color("080f20")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("c9d8ed")
-	env.ambient_light_energy = 0.72
+	env.ambient_light_color = Color("7187b4")
+	env.ambient_light_energy = 0.32
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.tonemap_exposure = 1.05
-	env.ambient_light_energy = 0.8
+	env.ambient_light_energy = 0.32
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_BG
 	env.glow_enabled = true
 	env.glow_intensity = 0.22
@@ -411,7 +498,7 @@ func _build_lighting() -> void:
 	add_child(world)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52, -28, 0)
-	sun.light_energy = 0.9
+	sun.light_energy = 0.12
 	sun.directional_shadow_max_distance = 90.0
 	sun.shadow_bias = 0.035
 	sun.shadow_enabled = true
@@ -429,7 +516,7 @@ func _build_lighting() -> void:
 func _build_player_camera() -> void:
 	var rig := CharacterBody3D.new()
 	rig.name = "Player"
-	rig.position = Vector3(0, 0.1, 36.0)
+	rig.position = Vector3(0, 0.1, 48.0)
 	rig.set_script(load("res://scripts/player_controller.gd"))
 	add_child(rig)
 
