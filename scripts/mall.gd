@@ -38,6 +38,11 @@ func _ready() -> void:
 	food_ordering.name = "FoodOrdering"
 	food_ordering.set_script(load("res://scripts/food_ordering.gd"))
 	add_child(food_ordering)
+	# Apply mobile-friendly graphics presets after all scene effects and NPCs exist.
+	var performance_manager := Node.new()
+	performance_manager.name = "MobilePerformance"
+	performance_manager.set_script(load("res://scripts/mobile_performance.gd"))
+	add_child(performance_manager)
 
 func _material(key: String, color: Color, roughness: float = 0.7, metallic: float = 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
