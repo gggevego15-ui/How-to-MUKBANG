@@ -56,14 +56,14 @@ func _apply_pbr(key: String, family: String) -> void:
 	if material == null:
 		return
 	var root := "res://assets/textures/pbr/%s_" % family
-	material.albedo_texture = load(root + "basecolor_512.png") as Texture2D
-	material.roughness_texture = load(root + "roughness_512.png") as Texture2D
-	material.normal_texture = load(root + "normal_512.png") as Texture2D
-	material.metallic_texture = load(root + "metallic_512.png") as Texture2D
+	material.albedo_texture = load(root + "basecolor_2k.svg") as Texture2D
+	material.roughness_texture = load(root + "roughness_2k.svg") as Texture2D
+	material.normal_texture = load(root + "normal_2k.svg") as Texture2D
+	material.metallic_texture = load(root + "metallic_2k.svg") as Texture2D
 	material.normal_enabled = true
 	material.roughness = 1.0
 	material.metallic = 1.0
-	material.normal_scale = 0.45 if family == "food" else 0.3
+	material.normal_scale = 0.28 if family == "food" else 0.2
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	material.uv1_scale = Vector3(0.22, 0.22, 0.22)
 
@@ -102,7 +102,7 @@ func _make_materials() -> void:
 	_material("screen", Color("152c42"), 0.16)
 	_material("bun_seed", Color("f8e4b5"), 0.7)
 
-	# Shared 512x512 PBR texture sets: colour, roughness, normal and metallic.
+	# Shared 2K SVG PBR maps; Godot rasterizes them on import and samples them with mipmapped filtering.
 	for key in ["bun", "bun_top", "patty", "lettuce", "tomato", "cheese", "fries", "paper", "cup_red", "drink", "salad", "bun_seed"]:
 		_apply_pbr(key, "food")
 	for key in ["wood", "wood_light"]:
