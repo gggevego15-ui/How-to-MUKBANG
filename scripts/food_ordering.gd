@@ -34,9 +34,14 @@ var _cart_label: Label
 var _items_box: VBoxContainer
 var _mobile_order_button: Button
 var _status_label: Label
+var _food_service: Node
 
 func _ready() -> void:
 	_player = get_parent().get_node_or_null("Player") as CharacterBody3D
+	_food_service = Node.new()
+	_food_service.name = "FoodService"
+	_food_service.set_script(load("res://scripts/food_service.gd"))
+	add_child(_food_service)
 	_build_ui()
 
 func _process(_delta: float) -> void:
@@ -285,13 +290,19 @@ func _place_order() -> void:
 		_status_label.text = "Не хватает денег! Баланс: " + str(_balance) + " ₽"
 		return
 	_balance -= total
-	_status_label.text = "Заказ принят! Еду готовят 🍗"
+	var ordered_items: Array[Dictionary] = []
+	for key in _cart.keys():
+		ordered_items.append({"index": int(key), "count": int(_cart[key])})
+	_status_label.text = "Заказ принят! Готовим свежую еду 🍗"
 	_cart.clear()
 	_refresh_cart()
-	# Brief preparation timer, then a persistent ready notification.
 	await get_tree().create_timer(2.0).timeout
+	if not is_inside_tree():
+		return
+	if _food_service != null:
+		_food_service.call("serve", ordered_items, PRODUCTS, _player)
 	if is_instance_valid(_status_label) and _menu_open:
-		_status_label.text = "ЗАКАЗ ГОТОВ! Забирай на стойке 🍱"
+		_status_label.text = "ЗАКАЗ ГОТОВ! Еда появилась на столе 🍱 Нажми F или кнопку ЕСТЬ."
 
 func _open_menu() -> void:
 	_menu_open = true
