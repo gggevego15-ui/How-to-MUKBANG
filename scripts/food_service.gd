@@ -9,6 +9,7 @@ var _hint: Label
 var _is_eating := false
 var _fullness := 0
 var _feedback: Label
+const BITE_SAMPLE_RATE := 22050
 
 func _ready() -> void:
 	_player = get_parent().get_parent().get_node_or_null("Player") as CharacterBody3D
@@ -96,6 +97,8 @@ func serve(ordered_items: Array, products: Array, player: CharacterBody3D) -> vo
 			if n >= 8:
 				break
 			var food := _make_food(str(product["name"]), str(product["category"]), n)
+			food.set_meta("food_product", str(product["name"]))
+			food.set_meta("food_category", str(product["category"]))
 			var angle := float(n) * TAU / float(maxi(total, 1))
 			var radius := 0.52 if total > 1 else 0.0
 			var target := Vector3(cos(angle) * radius, 0.16, sin(angle) * radius)
@@ -192,6 +195,7 @@ func _eat_one() -> void:
 		return
 	_is_eating = true
 	var food := _servings.pop_front()
+	_play_bite_sound(food)
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(food, "position", food.position + Vector3(0, 0.62, 0.22), 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -218,3 +222,91 @@ func _eat_one() -> void:
 			cleanup.tween_property(_tray, "scale", Vector3.ONE * 0.01, 0.25)
 			cleanup.tween_callback(_tray.queue_free)
 	)
+
+
+## Plays a short, food-specific procedural sound without external audio files.
+## Layered filtered noise, crunchy transients and soft low-frequency impacts keep the
+## sound small enough for mobile while making each food group recognizably different.
+func _play_bite_sound(food: Node3D) -> void:
+	var product := str(food.get_meta("food_product", "Еда"))
+	var category := str(food.get_meta("food_category", "ФАСТФУД"))
+	var stream := _make_bite_stream(product, category)
+	var player := AudioStreamPlayer.new()
+	player.name = "BiteSound"
+	player.stream = stream
+	player.volume_db = -3.0
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+
+func _make_bite_stream(product: String, category: String) -> AudioStreamWAV:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var duration := 0.72
+	var crunch := 0.72
+	var wetness := 0.18
+	var low_hit := 0.25
+	var fizz := false
+	if category == "КУРОЧКА":
+		crunch = 1.0
+		wetness = 0.12
+		low_hit = 0.32
+	elif category == "РОЛЛЫ":
+		crunch = 0.22
+		wetness = 0.65
+		low_hit = 0.16
+	elif category == "НАПИТКИ":
+		duration = 0.88
+		crunch = 0.08
+		wetness = 0.76
+		low_hit = 0.08
+		fizz = product == "Кола" or product == "Лимонад"
+	elif category == "ДЕСЕРТЫ":
+		crunch = 0.30
+		wetness = 0.42
+		low_hit = 0.18
+	elif product == "Картошка фри":
+		crunch = 0.92
+		wetness = 0.10
+	elif product == "Пицца пепперони":
+		crunch = 0.84
+		wetness = 0.20
+		low_hit = 0.34
+	elif product == "Лапша вок":
+		duration = 0.78
+		crunch = 0.16
+		wetness = 0.82
+		low_hit = 0.12
+	elif product == "Бургер":
+		crunch = 0.68
+		wetness = 0.28
+		low_hit = 0.42
+
+	var sample_count := int(BITE_SAMPLE_RATE * duration)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	var bursts: Array[float] = []
+	for i in range(7):
+		bursts.append(rng.randf_range(0.045, duration * 0.72) + float(i) * 0.025)
+	var low_phase := rng.randf_range(0.0, TAU)
+	for i in range(sample_count):
+		var t := float(i) / float(BITE_SAMPLE_RATE)
+		var envelope := minf(t / 0.025, 1.0) * maxf(0.0, 1.0 - t / duration)
+		var noise := rng.randf_range(-1.0, 1.0)
+		var crisp := 0.0
+		for burst in bursts:
+			var age := t - burst
+			if age >= 0.0 and age < 0.055:
+				crisp += noise * exp(-age * 78.0) * (1.0 if int(burst * 1000.0) % 2 == 0 else 0.58)
+		var chew := sin(TAU * (82.0 + low_hit * 48.0) * t + low_phase) * low_hit
+		var moist := sin(TAU * (210.0 + 95.0 * sin(t * 17.0)) * t) * wetness * 0.18
+		var hiss := rng.randf_range(-1.0, 1.0) * (0.14 if fizz else 0.035)
+		var value := (crisp * crunch * 0.58 + chew * 0.32 + moist + hiss) * envelope
+		value = clampf(value, -0.92, 0.92)
+		pcm.encode_s16(i * 2, int(value * 32767.0))
+	var audio := AudioStreamWAV.new()
+	audio.format = AudioStreamWAV.FORMAT_16_BITS
+	audio.mix_rate = BITE_SAMPLE_RATE
+	audio.stereo = false
+	audio.data = pcm
+	return audio
